@@ -1,4 +1,4 @@
-# Tutorial 1
+# Tutorial I
 
 ## Pre-requites for this tutorial
 Please, install Ubuntu 18.04 and ROS Melodic.
@@ -37,11 +37,11 @@ env| grep ROS
 Make sure that if ROS_MASTER_URI and ROS_ROOT, ETC are setup. 
 
 
-# Message passing using
+# Practice 1: Message publication and subscription
 Let's test topic publisher and listener! First, check if you have the two files by changing your working directory:
 
 ~~~~bash
-roscd cs492_IIR/src/cs492_IIR
+roscd tutorial_1/src/tutorial_1
 ~~~~
 Note that 'roscd' works after loading the ROS' environment setup.
 
@@ -56,4 +56,42 @@ Then, let's open a subscriber file
 gedit listener.py
 ~~~~
 This file subscribes the string format of messages via 'chatter' topic and pringout the contents using the loginfo function.
+
+Please, open three terminals and then run one roscore and the talker&listener nodes.
+
+From terminal 1
+~~~~bash
+roscore
+~~~~
+Terminal 2: the talker node will publish a message via chatter topic.
+~~~~bash
+rosrun tutorial_1 talker.py
+~~~~
+Terminal 3: the listener node will subscribe and printout the message. 
+~~~~bash
+roscore tutorial_1 listener.py
+~~~~
+
+
+# Practice 2: Turtlebot3
+Let's first install Turtlebot3 that a new turtlebot, that run on a physics based simulator, GAZEBO!
+~~~~bash
+sudo apt install ros-melodic-turtlebot3 ros-melodic-turtlebot3-gazebo
+~~~~
+
+Select a robot name and launch the robot simulator. 
+~~~~bash
+export TURTLEBOT3_MODEL=burger
+roslaunch turtlebot3_gazebo turtlebot3_empty_world.launch
+~~~~
+
+Run a keyboard-based controller
+~~~~bash
+export TURTLEBOT3_MODEL=burger
+roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
+~~~~
+
+You can now control the robot using keyboard and also look at the communication between nodes. 
+Please, check following tutorial for more interesting scenarios! 
+https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/
 

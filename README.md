@@ -10,8 +10,8 @@ $ source /opt/ros/melodic/setup.sh
 
 Move to anyfolder you want to place the class code. Then, you can create the workspace,
 ~~~~bash
-mkdir -p catkin_ws/src
-cd catkin_ws/src/
+mkdir -p ~/catkin_ws/src
+cd ~/catkin_ws/src/
 catkin_init_workspace
 ~~~~
 
@@ -94,4 +94,34 @@ roslaunch turtlebot3_teleop turtlebot3_teleop_key.launch
 You can now control the robot using keyboard and also look at the communication between nodes. 
 Please, check following tutorial for more interesting scenarios! 
 https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/
+
+
+# Practice 3: Create your own package
+You can create a package to run your own nodes
+~~~~bash
+cd ~/catkin_ws/src/
+catkin_create_pkg cs492_practice3 std_msgs rospy roscpp
+~~~~
+This command creates a package named cs492_practice3 that lists std_msgs, rospy, and roscpp as dependencies. Then you can build your catkin workspace
+~~~~bash
+cd ~/catkin_ws
+catkin_make
+~~~~
+
+After then, you should source
+~~~~bash
+source ~/catkin_ws/devel/setup.bash
+~~~~
+
+Verify your package ahs installed by moving to the package folder
+~~~~bash
+roscd cs492_practice3
+~~~~
+
+# ETC
+There will be many useful terminal commands like rostopic, rqt_graph, rosbag, etc. Please, google and test those by yourself.
+
+
+
+
 

@@ -74,7 +74,7 @@ roscore tutorial_1 listener.py
 
 
 # Practice 2: Turtlebot3
-Let's first install Turtlebot3 that a new turtlebot, that run on a physics based simulator, GAZEBO!
+Let's first install Turtlebot3, a mobile robot, which can run on a physics based simulator, GAZEBO!
 ~~~~bash
 sudo apt install ros-melodic-turtlebot3 ros-melodic-turtlebot3-gazebo
 ~~~~

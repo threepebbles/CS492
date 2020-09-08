@@ -119,7 +119,8 @@ roscd cs492_practice3
 ~~~~
 
 # ETC
-There will be many useful terminal commands like rostopic, rqt_graph, rosbag, etc. Please, google and test those by yourself.
+There are many useful command-line tools like rostopic, rqt_graph, rosbag, etc. Please, see http://wiki.ros.org/ROS/CommandLineTools
+
 
 
 

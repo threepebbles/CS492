@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch file parameters -->
+  <arg name="debug"       default="true" />
+  <arg name="2f_gripper"  default="false" />
+  <arg name="hardwareInterface" default="PositionJointInterface" />
+
+  <arg if=      "$(arg debug)"  name="DEBUG" value="screen"/>
+  <arg unless = "$(arg debug)"  name="DEBUG" value="log"/>
+
+  <group if="$(arg 2f_gripper)">
+    <!-- Controllers config -->
+    <group if="$(eval hardwareInterface == 'PositionJointInterface')">
+      <rosparam file="$(find ur5_gazebo)/controller/ur5_robotiq_2f85_position_controllers.yaml"
+                command="load" />    
+    </group>
+    <group if="$(eval hardwareInterface == 'EffortJointInterface')">
+      <rosparam file="$(find ur5_gazebo)/controller/ur5_robotiq_2f85_effort_controllers.yaml"
+                command="load" />    
+    </group>
+    <!-- Load controllers -->
+    <node name="robot_controllers" pkg="controller_manager" type="spawner"
+          output="$(arg DEBUG)"
+          args="joint_state_controller trajectory_controller gripper_controller"/>
+  </group>
+  <group unless="$(arg 2f_gripper)">
+    <!-- Controllers config -->
+    <rosparam file="$(find ur5_gazebo)/controller/ur5_pos_controllers.yaml"
+              command="load" />
+    <!-- Load controllers -->
+    <node name="robot_controllers" pkg="controller_manager" type="spawner"
+          output="$(arg DEBUG)"
+          args="joint_state_controller trajectory_controller"/>    
+  </group>
+  
+  <!-- TF -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher"
+        name="state_publisher">
+    <param name="publish_frequency"  type="double" value="50" />
+  </node>
+
+</launch>

@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="s_model_open">
+
+    <xacro:include filename="$(find robotiq_s_model_visualization)/cfg/robotiq_hand_macro.urdf.xacro" />
+
+    <!-- mount the Gripper to the robot -->
+
+    <joint name="s_model_adapter" type="fixed" >
+      <origin xyz="0.0 0.0 0.015" rpy="0.0 0.0 0.0"/>
+      <parent link="fts_toolside" />
+      <child link="s_model_adapter_link" />
+    </joint>
+
+    <!--joint name="s_model_fix" type="fixed" >
+      <origin xyz="0.0 0.0 0.018" rpy="1.5708 0.0 -0.7854"/>
+      <parent link="s_model_adapter_link" />
+      <child link="s_model_link" />
+    </joint-->
+
+    <link name="s_model_adapter_link">
+
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <cylinder radius="0.04" length="0.03"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.04" length="0.03"/>
+        </geometry>
+        <material name="red"/>
+      </collision>
+    </link>
+
+    <!--link name="s_model_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://robotiq_s_model_control/meshes/s_model_open.dae" />
+        </geometry>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://robotiq_s_model_control/meshes/s_model_open_collision.stl" />
+        </geometry>
+      </collision>
+    </link-->
+
+    <!-- Robotiq Gripper -->    
+    <xacro:robotiq_hand prefix="l_" reflect="1" parent="s_model_adapter_link">
+        <origin xyz="0 0 0.058" rpy="1.5708 0 2.3562"/>
+    </xacro:robotiq_hand>
+    <gazebo>
+        <plugin name="robotiq_left_hand_plugin" filename="libRobotiqHandPlugin.so">
+            <side>left</side>
+            <kp_position>5.0</kp_position>
+            <kd_position>0.5</kd_position>
+        </plugin>
+    </gazebo>
+
+    
+</robot>

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<robot name="ur5" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find ur5_description)/urdf/ur5_joint_limited_robot.urdf.xacro" />
+  <xacro:include filename="$(find robotiq_force_torque_sensor)/urdf/robotiq_fts300.urdf.xacro" />
+  <xacro:include filename="$(find robotiq_description)/urdf/robotiq_3f_gripper.urdf.xacro" />
+    
+  <!-- Gazebo FT sensor plugin -->
+  <!-- <gazebo reference="measurment_joint"> -->
+  <!--   <provideFeedback>true</provideFeedback> -->
+  <!-- </gazebo> -->
+  <!-- <gazebo> -->
+  <!--   <plugin name="ft_sensor_plugin" filename="libgazebo_ros_ft_sensor.so"> -->
+  <!--     <updateRate>250.0</updateRate> -->
+  <!--     <topicName>ft_sensor/raw</topicName> -->
+  <!--     <gaussianNoise>0.0</gaussianNoise> -->
+  <!--     <jointName>measurment_joint</jointName> -->
+  <!--   </plugin> -->
+  <!-- </gazebo> -->
+  
+</robot>

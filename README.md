@@ -69,7 +69,7 @@ rosrun tutorial_1 talker.py
 ~~~~
 Terminal 3: the listener node will subscribe and printout the message. 
 ~~~~bash
-roscore tutorial_1 listener.py
+rosrun tutorial_1 listener.py
 ~~~~
 
 

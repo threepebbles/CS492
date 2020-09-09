@@ -5,7 +5,7 @@ Please, install Ubuntu 18.04 and ROS Melodic.
 
 ## Installation of your project repository
 ~~~~bash
-$ source /opt/ros/melodic/setup.sh
+source /opt/ros/melodic/setup.sh
 ~~~~
 
 Move to anyfolder you want to place the class code. Then, you can create the workspace,

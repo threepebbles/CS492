@@ -26,7 +26,7 @@ If you want catkin_build, you can use it instead of catkin_make.
 Lastly, load the new environmental variables and also add to path the environmental setup to your bashrc
 ~~~~bash
 source ./devel/setup.bash
-echo 'source devel/setup.bash' >> ~/.bashrc
+echo 'source ~/catkin_ws/devel/setup.bash' >> ~/.bashrc
 ~~~~
 
 You can verify your ROS install by confirming the environmental variables

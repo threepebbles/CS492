@@ -55,5 +55,8 @@
         launch-prefix="bash -c 'sleep 5; rosservice call
                        gazebo/unpause_physics {};sleep 1 ;$0 $@' "/>
   
-  
+
+  <node pkg="tf" type="static_transform_publisher"
+        name="world_frame_trans" args="0.15 0.003 0 1.5707 0 1.5707 robotiq_85_base_link gripper_link 100"
+        respawn="true" />   
 </launch>

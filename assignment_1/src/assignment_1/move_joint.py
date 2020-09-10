@@ -34,7 +34,6 @@ def move(angles):
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
     g.trajectory.points = [
-        ## JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(2.0)),
         JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(0.01))]
     client.send_goal(g)
     ## try:

@@ -1,6 +1,6 @@
-## There can be changes on repository. Please, pull the repo. and then re-build.
+## There can be changes on this repository. Please, pull and re-build this repository.
 
-## After launching the GAZEBO, it will take long time to download some models. Wait about 5-10min and kill the simulator. After then relaunch the simulator again.
+## After launching the GAZEBO, it may hang for a while to download some models. Please, wait 5-10min and kill the simulator once. After then relaunch the simulator again.
 
 
 # Problem 1
@@ -29,4 +29,11 @@ rosparam set /trajectory_controller/gains/shoulder_pan_joint/d 10
 ~~~~
 
 
+
+# Problem 1
+Launch the UR5 robot with PID controllers on Terminal 1:
+~~~~bash
+roslaunch ur5_gazebo ur5_setup.launch 
+~~~~
+Please, ignore any error message like "No p gain" or "Error in REST request".
 

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<launch>
+
+	<rosparam param="s_model_ip">"172.16.108.41"</rosparam>
+	
+	<node name="s_model" pkg="robotiq_s_model_control" type="SModelTcpNode.py" respawn="true" output="screen">
+        </node>
+
+</launch>

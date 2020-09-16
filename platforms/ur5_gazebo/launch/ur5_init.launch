@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="2f_gripper"  default="false" />
+
+  <group if="$(arg 2f_gripper)">
+  </group>
+  <group unless="$(arg 2f_gripper)">  
+    <!-- Set robot-specific paramters -->
+    <param name="world_frame" type="str" value="world" />
+    <param name="torso_frame" type="str" value="base" />
+    <param name="arm_base_frame" type="str" value="base_link" />
+    <param name="ee_frame" type="str" value="l_palm" />
+    <param name="tool_offset_frame" type="str" value="[0,0.142,0,0,0,0]" />
+    <param name="controller_ns" type="str" value="trajectory_controller" />
+    <node pkg="complex_action_client" type="arm_client_ur5_robotiq_3F.py" name="init_ur5"
+          args="--sim --init"
+          launch-prefix="bash -c 'sleep 5; rosservice call
+                         gazebo/unpause_physics {};sleep 1 ;$0 $@' "      
+          />
+
+    <node pkg="complex_action_client" type="activate_gripper"
+          name="activate_gripper"
+          launch-prefix="bash -c 'sleep 9; $0 $@' "
+          args="" />
+  </group>
+
+</launch>

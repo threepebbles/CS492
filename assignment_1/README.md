@@ -29,4 +29,9 @@ rosparam set /trajectory_controller/gains/shoulder_pan_joint/d 10
 ~~~~
 
 
-
+# Problem 2 and 3
+Launch the UR5 robot with PID controllers on Terminal 1:
+~~~~bash
+roslaunch ur5_gazebo ur5_setup.launch 
+~~~~
+Please, ignore any error message like "No p gain" or "Error in REST request".

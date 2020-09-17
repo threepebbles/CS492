@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot name="cracker" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find world_model_data)/data/models/xacro/common.xacro"/>
+
+  <xacro:macro name="cracker_box" params="name parent *origin">
+
+    <link name="${name}-base">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+	      <mesh filename="file://$(find world_model_data)/data/models/meshes/ycb-meshes/cracker_box_centered.stl"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+	      <mesh filename="file://$(find world_model_data)/data/models/meshes/ycb-meshes/cracker_box_centered.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
+      <mass value="35.336455"/>
+      <inertia ixx="1.849155" ixy="-0.000354" ixz="-0.154188" iyy="1.662671" iyz="0.003292" izz="0.802239"/>
+    </inertial>
+    </link>
+
+    <joint name="joint_${name}_base" type="fixed">
+      <xacro:insert_block name="origin" /> <!-- transform from base link to this joint frame -->  
+      <parent link="${parent}"/>
+      <child link="${name}-base" />
+    </joint>
+
+  </xacro:macro>
+
+</robot>

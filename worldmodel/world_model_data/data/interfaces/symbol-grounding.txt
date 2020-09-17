@@ -1,0 +1,21 @@
+The example JSON message from symbol grounding that is sent as 
+a ROS string message. 
+
+{
+   "param_num" : 2,
+   "params" : {
+      "1" : {
+         "destination" : "trash",
+         "primitive_action" : "pick_object",
+         "source" : "cracker-box-a"
+      },
+      "2" : {
+         "destination" : "store",
+         "primitive_action" : "pick_object",
+         "source" : "cracker-box-b"
+      }
+   },
+   "timestamp" : 1234,
+   "type" : "assemble"
+}
+

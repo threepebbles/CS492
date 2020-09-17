@@ -1,0 +1,3 @@
+The ROS string message that comes from the Google speech API. 
+
+"pick up the middle block in the row of blocks"

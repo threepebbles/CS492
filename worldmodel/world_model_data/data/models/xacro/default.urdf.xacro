@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<robot name="default" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find world_model_data)/data/models/xacro/common.xacro"/>
+
+  <xacro:macro name="default" params="name parent *origin">
+
+    <link name="${name}-base" />
+
+    <joint name="joint_${name}_base" type="fixed">
+      <xacro:insert_block name="origin" /> <!-- transform from base link to this joint frame -->  
+      <parent link="${parent}"/>
+      <child link="${name}-base" />
+    </joint>
+
+  </xacro:macro>
+
+</robot>

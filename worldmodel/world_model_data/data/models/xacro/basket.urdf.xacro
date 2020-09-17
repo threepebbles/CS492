@@ -1,0 +1,147 @@
+<?xml version="1.0"?>
+<robot name="basket" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find world_model_data)/data/models/xacro/common.xacro"/>
+
+  <xacro:macro name="basket" params="name length width depth
+                                     color *origin">
+
+    <link name="${name}-base">
+      <!--link name="${name}-bottom"-->
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${length} ${width} 0.005"/>
+        </geometry>
+        <material name="basket_color"/>
+      </visual>
+      <collision>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+          <box size="${length} ${width} 0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
+        <mass value="1.0"/>
+        <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+      </inertial>
+
+
+      <!--link name="${name}-left"-->
+      <visual>
+        <origin xyz="0 -${width/2.} ${depth/2.}" rpy="1.57 0 0"/>
+        <geometry>
+          <box size="${length} ${depth} 0.005"/>
+        </geometry>
+        <material name="basket_color"/>
+      </visual>
+      <collision>
+        <origin xyz="0 -${width/2.} ${depth/2.}" rpy="1.57 0 0"/>
+        <geometry>
+          <box size="${length} ${depth} 0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 -${width/2.} ${depth/2.}" rpy="1.57 0 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+      </inertial>
+
+      <!--link name="${name}-right"-->
+      <visual>
+        <origin xyz="0 ${width/2.} ${depth/2.}" rpy="1.57 0 0"/>
+        <geometry>
+          <box size="${length} ${depth} 0.005"/>
+        </geometry>
+        <material name="basket_color"/>
+      </visual>
+      <collision>
+        <origin xyz="0 ${width/2.} ${depth/2.}" rpy="1.57 0 0"/>
+        <geometry>
+          <box size="${length} ${depth} 0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 ${width/2.} ${depth/2.}" rpy="1.57 0 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+      </inertial>
+
+
+      <!--link name="${name}-up"-->
+      <visual>
+        <origin xyz="${length/2.} 0 ${depth/2.}" rpy="0 1.57 0"/>
+        <geometry>
+          <box size="${depth} ${width} 0.005"/>
+        </geometry>
+        <material name="basket_color"/>
+      </visual>
+      <collision>
+        <origin xyz="${length/2.} 0 ${depth/2.}" rpy="0 1.57 0"/>
+        <geometry>
+          <box size="${depth} ${width} 0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="${length/2.} 0 ${depth/2.}" rpy="0 1.57 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+      </inertial>
+
+      <!--link name="${name}-down"-->
+      <visual>
+        <origin xyz="-${length/2.} 0 ${depth/2.}" rpy="0 1.57 0"/>
+        <geometry>
+          <box size="${depth} ${width} 0.005"/>
+        </geometry>
+        <material name="basket_color"/>
+      </visual>
+      <collision>
+        <origin xyz="-${length/2.} 0 ${depth/2.}" rpy="0 1.57 0"/>
+        <geometry>
+          <box size="${depth} ${width} 0.005"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="-${length/2.} 0 ${depth/2.}" rpy="0 1.57 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+      </inertial>
+    </link>
+
+    <gazebo reference="${name}-base">
+      <material>Gazebo/${color}</material>
+      <kp>1000000.0</kp>
+      <kd>1.0</kd>
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <minDepth>0.001</minDepth>
+    </gazebo>
+
+  </xacro:macro>
+
+  <xacro:arg name="name" default="place-tray"/>
+  <xacro:arg name="length" default="0.44"/>
+  <xacro:arg name="width" default="0.56"/>
+  <xacro:arg name="depth" default="0.12"/>
+  <xacro:arg name="color" default="WoodPallet"/>
+  <xacro:arg name="xyz" default="0 0 0"/>
+  <xacro:arg name="rpy" default="0 0 0"/>
+
+  <xacro:basket name="$(arg name)" 
+              length="$(arg length)" width="$(arg width)"
+              depth="$(arg depth)" color="$(arg color)">
+      <origin xyz="$(arg xyz)" rpy="$(arg rpy)" />    
+  </xacro:basket>
+  
+</robot>
+
+
+
+
+
+
+
+
+

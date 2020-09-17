@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<robot name="clamp_4" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find world_model_data)/data/models/xacro/common.xacro"/>
+
+  <material name="clamp_color">
+      <color rgba="0.545 0.270 0.074 1.0"/>
+  </material>
+
+  <xacro:macro name="clamp_4" params="name parent *origin">
+
+    <link name="${name}-base">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <geometry>
+	  <mesh filename="file://$(find world_model_data)/data/models/meshes/tools/clamp_4.stl"/>
+        </geometry>
+        <material name="clamp_color"/>
+      </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+	<mesh filename="file://$(find world_model_data)/data/models/meshes/tools/clamp_4.stl"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0.000000 0.000000 0.000000"/>
+      <mass value="1.0"/>
+      <inertia ixx="1.849155" ixy="-0.000354" ixz="-0.154188" iyy="1.662671" iyz="0.003292" izz="0.802239"/>
+    </inertial>
+    </link>
+
+    <!--Fake joints for controllable floating object-->
+    <joint name="joint_${name}_x" type="prismatic">
+          <parent link="${parent}"/>
+          <child link="${name}-x"/>
+          <axis xyz="1 0 0"/>      
+          <limit effort="30" velocity="0.05" lower="-2." upper="2." />
+    </joint>    
+    <link name="${name}-x"/>
+
+    <joint name="joint_${name}_y" type="prismatic">
+      <parent link="${name}-x"/>
+      <child link="${name}-y" />
+      <axis xyz="0 1 0" />
+      <limit effort="30" velocity="0.05" lower="-2." upper="2." />
+    </joint>    
+    <link name="${name}-y"/>
+
+    <joint name="joint_${name}_z" type="prismatic">
+      <parent link="${name}-y"/>
+      <child link="${name}-z" />
+      <axis xyz="0 0 1" />
+      <limit effort="30" velocity="0.05" lower="-2." upper="2." />      
+    </joint>    
+    <link name="${name}-z"/>
+
+    <joint name="joint_${name}_qx" type="continuous">
+      <parent link="${name}-z"/>
+      <child link="${name}-qx" />
+      <axis xyz="1 0 0" />
+    </joint>    
+    <link name="${name}-qx"/>
+    <joint name="joint_${name}_qy" type="continuous">
+      <parent link="${name}-qx"/>
+      <child link="${name}-qy" />
+      <axis xyz="0 1 0" />
+    </joint>    
+    <link name="${name}-qy"/>
+    <joint name="joint_${name}_qz" type="continuous">
+      <parent link="${name}-qy"/>
+      <child link="${name}-base" />
+      <axis xyz="0 0 1" />
+    </joint>    
+    
+  </xacro:macro>
+
+</robot>

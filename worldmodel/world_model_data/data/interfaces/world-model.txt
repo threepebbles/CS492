@@ -1,0 +1,10 @@
+The following gives examples of ROS JSON string messages that come from the 
+world model. These vary for the various components of the world model. 
+
+1. Geometry. 
+ToDo: Subhro please fill this as per the WM ROS node. 
+
+2. Symbolic (Knowledge base, relational etc.)
+ToDo: Rohan, Subhro, Will
+
+

@@ -50,7 +50,7 @@ Make sure that if ROS_MASTER_URI and ROS_ROOT, ETC are setup.
 - [Assignment II]()
 - [Assignment III]()
 
-- [Manipulation Challenge]()
+- [Manipulation Challenge](manip_challenge/README.md)
 
 
 # ETC

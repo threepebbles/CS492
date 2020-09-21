@@ -13,7 +13,7 @@ import misc
 rospack = rospkg.RosPack()
 data_path = os.path.join(rospack.get_path('world_model_data'), 'data')
 xacro_path = os.path.join(data_path, 'models/xacro')
-sdf_path = os.path.join(rospack.get_path('manip_challenge'), 'models')
+sdf_path = os.path.join(rospack.get_path('manip_challenge'), 'data', 'models')
 
 def add_storage(obj_name="storage1", obj_type="basket",
                     length=0.39, width=0.42, depth=0.02,

@@ -2,8 +2,8 @@
 <launch>
 
   <include file="$(find ur5_gazebo)/launch/ur5_setup.launch">
-    <arg name="gazebo_models" value="$(find manip_challenge)/models:$(find ur5_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
-    <arg name="world_name" value="$(find manip_challenge)/worlds/ur5_picking_challenge.world" />
+    <arg name="gazebo_models" value="$(find manip_challenge)/data/models:$(find ur5_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
+    <arg name="world_name" value="$(find manip_challenge)/data/worlds/ur5_picking_challenge.world" />
   </include>
 
   <node name="set_objects" pkg="manip_challenge" type="add_object.py"

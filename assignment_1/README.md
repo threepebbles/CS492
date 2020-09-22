@@ -28,6 +28,8 @@ rosparam get /trajectory_controller/gains/shoulder_pan_joint/d
 rosparam set /trajectory_controller/gains/shoulder_pan_joint/d 10
 ~~~~
 
+![Alt text](docs/problem1.png?raw=true "Screenshot of the problem1 robot posture")
+
 
 # Problem 2 and 3
 Launch the UR5 robot with PID controllers on Terminal 1:

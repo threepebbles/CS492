@@ -4,7 +4,7 @@ CS492: Introduction to Intelligent Robotics
 ## Pre-requites for this tutorial
 Please, install Ubuntu 18.04 and ROS Melodic with dependencies:
 ~~~~bash
-sudo apt-get install ros-melodic-trac-ik ros-melodic-trac-ik-python ros-melodic-moveit-ros ros-melodic-moveit-planners* ros-melodic-moveit-ros-planning* ros-melodic-moveit-ros-move-group ros-melodic-moveit-ros-control-interface ros-melodic-moveit-kinematics ros-melodic-industrial-msgs ros-melodic-moveit-kinematics ros-melodic-ddynamic-reconfigure ros-melodic-gazebo-plugins ros-melodic-rqt-py-trees ros-melodic-py-trees* ros-melodic-gripper-action-controller ros-melodic-rqt-joint-trajectory-controller python-catkin-tools python-pyassimp ros-melodic-soem ros-melodic-effort-controllers -y
+sudo apt-get install ros-melodic-trac-ik ros-melodic-trac-ik-python ros-melodic-moveit-ros ros-melodic-moveit-planners* ros-melodic-moveit-ros-planning* ros-melodic-moveit-ros-move-group ros-melodic-moveit-ros-control-interface ros-melodic-moveit-kinematics ros-melodic-industrial-msgs ros-melodic-moveit-kinematics ros-melodic-ddynamic-reconfigure ros-melodic-gazebo-plugins ros-melodic-rqt-py-trees ros-melodic-py-trees* ros-melodic-gripper-action-controller ros-melodic-rqt-joint-trajectory-controller ros-melodic-joint-trajectory-controller python-catkin-tools python-pyassimp ros-melodic-soem ros-melodic-effort-controllers -y
 ~~~~
 
 ## Installation of your project repository

@@ -31,10 +31,19 @@ The instructor/TA will send a string that contains a dictionary format of comman
         "storage_right": ['snacks', 'biscuits', 'glue', 'soap'] }
 ~~~~
 This dictionary represents the final locations of objects on the front table. Your robot should subscribe the topic and pick-and-place the items on the right locations. You can test an example command using following script:
+
+Terminal 1
 ~~~~bash
 source ./devel/setup.bash
 rosrun manip_challenge item_list_pub.py
 ~~~~
+
+Terminal 2 (check the published topic from terminal)
+~~~~bash
+source ./devel/setup.bash
+rostopic echo /task_commands
+~~~~
+
 
 
 # How to query the pose of an object in the world model?

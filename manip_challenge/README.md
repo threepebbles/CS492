@@ -24,7 +24,7 @@ You will be able to see how to send joint command and also close/open the grippe
 
 
 
-# How to send a command?
+# How to publish and subscribe a task specification during the challenge?
 The instructor/TA will send a string that contains a dictionary format of commands via a topic "/task_commands":
 ~~~~bash
     d = {"storage_left": ['book', 'eraser', 'soap2'],
@@ -37,8 +37,10 @@ rosrun manip_challenge item_list_pub.py
 ~~~~
 
 
-# How to query the pose of object in the world model?
+# How to query the pose of an object in the world model?
+We are using the physics-based simulator, GAZEBO, for this challenge. Without using any perception method, we can identify and obtain the state of objects by subscribing the internal topics from GAZEO. Following commands and code show how to query the pose of a specific object:
 ~~~~bash
 source ./devel/setup.bash
 rosrun manip_challenge example2.py
 ~~~~
+

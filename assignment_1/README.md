@@ -41,3 +41,7 @@ Launch the UR5 robot with PID controllers on Terminal 1:
 roslaunch ur5_gazebo ur5_setup.launch 
 ~~~~
 Please, ignore any error message like "No p gain" or "Error in REST request".
+
+
+# FAQ
+If you cannot see the same posture as the above picture for the problem 1, please install dependencies in the README.md of https://github.com/rirolab/cs492_IIR

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <world time="0">
+
+    <object name="gripper_tip" type="na" position="0,0,0"
+            orientation="0,0,0,1" />
+    
+    <!-- Larger tray: -->
+    <!-- <object name="r3" type="basket" -->
+    <!--         position="0.82,-0.35,0" -->
+    <!--         orientation="0.0,0.0,-0.707,0.707" -->
+    <!--         color="WoodPallet" artag_id="0"> -->
+    <!--   <grip_pose>0.30,0,0.04,0,0,0,1</grip_pose> -->
+    <!--   <!-\- Tray size = 0.66 x 0.45 -\-> -->
+    <!--   <geometry type="tray" length="0.45" width="0.4" -->
+    <!--             depth="0.04"/> -->
+    <!-- </object> -->
+    
+
+    <object name="o1" type="block" position="0.45, -0.2,0.775"
+            orientation="0,0,0,1" color="red">
+      <geometry type="cube" length="0.04" width="0.04"
+                height="0.04"/>
+    </object>
+          
+    <object name="o2" type="block" position="0.45, 0, 0.775"
+            orientation="0,0,0,1" color="orange">
+      <geometry type="cube" length="0.04" width="0.04"
+                height="0.04"/>
+    </object>
+
+    <object name="o3" type="block" position="0.45, 0.2, 0.775"
+            orientation="0,0,0,1" color="green">
+      <geometry type="cube" length="0.04" width="0.04"
+                height="0.04"/>
+    </object>
+    
+
+    <!-- Initial/Final Location -->
+    <!-- <object name="r1" type="store" -->
+    <!--         position="0.35,-0.75,-0.36465" orientation="0,0,0.7,0.7" -->
+    <!--         color="WoodPallet"> -->
+    <!--   <geometry type="basket" length="0.39" width="0.42" -->
+    <!--             depth="0.02"/> -->
+    <!-- </object>     -->
+    <!-- <object name="r2" type="store" -->
+    <!--         position="0.9,0.7,-0.28" orientation="0,0,-0.7,0.7" -->
+    <!--         color="WoodPallet"> -->
+    <!--   <geometry type="basket" length="0.25" width="0.3" -->
+    <!--             depth="0.01"/> -->
+    <!--   <!-\- Bigger tray -\-> -->
+    <!--   <!-\- <geometry type="basket" length="0.45" width="0.33" -\-> -->
+    <!--             <!-\- depth="0.01"/> -\-> -->
+    <!-- </object> -->
+
+    
+  </world>
+</root>

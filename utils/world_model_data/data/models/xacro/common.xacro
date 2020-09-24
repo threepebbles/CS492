@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<robot name="common" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="M_PI" value="3.1415926535897931" />
+
+  <!-- see https://secure.wikimedia.org/wikipedia/en/wiki/List_of_moment_of_inertia_tensors -->
+  <xacro:macro name="sphere_inertial" params="radius mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <xacro:insert_block name="origin" />
+      <inertia ixx="${0.4 * mass * radius * radius}" ixy="0.0" ixz="0.0"
+        iyy="${0.4 * mass * radius * radius}" iyz="0.0"
+        izz="${0.4 * mass * radius * radius}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="cylinder_inertial" params="radius length mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <xacro:insert_block name="origin" />
+      <inertia ixx="${0.0833333 * mass * (3 * radius * radius + length * length)}" ixy="0.0" ixz="0.0"
+        iyy="${0.0833333 * mass * (3 * radius * radius + length * length)}" iyz="0.0"
+        izz="${0.5 * mass * radius * radius}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="box_inertial" params="x y z mass *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <xacro:insert_block name="origin" />
+      <inertia ixx="${0.0833333 * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+        iyy="${0.0833333 * mass * (x*x + z*z)}" iyz="0.0"
+        izz="${0.0833333 * mass * (x*x + y*y)}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="default_inertial">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.001" ixy="0.0" ixz="0.0" iyy="0.001" iyz="0.0" izz="0.001" />
+    </inertial>
+  </xacro:macro>
+
+  <!--Without this, Gazebo will not visualize other objects.... -->
+  <xacro:macro name="fakebase" params="name parent color *origin">
+    <link name="${name}-base">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.1"/>
+        <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+      </inertial>      
+    </link>
+    
+    <joint name="joint_${name}_base" type="fixed">
+      <xacro:insert_block name="origin" /> <!-- transform from base link to this joint frame -->  
+      <parent link="${parent}"/>
+      <child link="${name}-base" />
+    </joint>
+
+  </xacro:macro>
+  
+</robot>

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>complex_action_client</name>
+  <version>0.0.0</version>
+  <description>The complex_action_client package</description>
+
+  <maintainer email="daehyung@csail.mit.edu">Daehyung Park</maintainer>
+
+  <license>TODO</license>
+
+
+  <!-- Dependencies needed to compile this package. -->
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_export_depend>rospy</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
+  <build_export_depend>geometry_msgs</build_export_depend>
+  
+  <!-- Dependencies needed after this package is compiled. -->
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>control_msgs</exec_depend>
+  <exec_depend>trajectory_msgs</exec_depend>
+  <exec_depend>actionlib</exec_depend>
+  <exec_depend>actionlib_msgs</exec_depend>
+  <!-- <exec_depend>robotiq_s_model_control_client</exec_depend> -->
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>trac_ik_python</exec_depend>
+  
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>

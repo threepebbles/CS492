@@ -1,0 +1,6 @@
+<Robot name="screwdriver" file="screwdriver.dae">
+  <Manipulator name="screwdriver">
+    <base>base</base>
+    <effector>tip</effector>
+  </Manipulator>
+</Robot>

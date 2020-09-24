@@ -1,0 +1,6 @@
+We use a common file to load in the names of the channels. 
+Ignore the LCM channels and pay attention to the ROS channels. 
+
+Note that ROS params is the correct way to load this information. 
+Loading names via xml is a style inherited from earlier projects 
+and can/should be changed. 

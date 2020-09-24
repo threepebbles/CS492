@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<robot name="empty" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find world_model_data)/data/models/xacro/common.xacro"/>
+
+  <xacro:macro name="empty" params="name parent *origin">
+
+    <link name="${name}-base" />
+
+    <!--Fake joints for controllable floating object-->
+    <joint name="joint_${name}_x" type="prismatic">
+          <parent link="${parent}"/>
+          <child link="${name}-x"/>
+          <axis xyz="1 0 0"/>      
+          <limit effort="30" velocity="0.05" lower="-2." upper="2." />
+    </joint>    
+    <link name="${name}-x"/>
+
+    <joint name="joint_${name}_y" type="prismatic">
+      <parent link="${name}-x"/>
+      <child link="${name}-y" />
+      <axis xyz="0 1 0" />
+      <limit effort="30" velocity="0.05" lower="-2." upper="2." />
+    </joint>    
+    <link name="${name}-y"/>
+
+    <joint name="joint_${name}_z" type="prismatic">
+      <parent link="${name}-y"/>
+      <child link="${name}-z" />
+      <axis xyz="0 0 1" />
+      <limit effort="30" velocity="0.05" lower="-2." upper="2." />      
+    </joint>    
+    <link name="${name}-z"/>
+
+    <joint name="joint_${name}_qx" type="continuous">
+      <parent link="${name}-z"/>
+      <child link="${name}-qx" />
+      <axis xyz="1 0 0" />
+    </joint>    
+    <link name="${name}-qx"/>
+    <joint name="joint_${name}_qy" type="continuous">
+      <parent link="${name}-qx"/>
+      <child link="${name}-qy" />
+      <axis xyz="0 1 0" />
+    </joint>    
+    <link name="${name}-qy"/>
+    <joint name="joint_${name}_qz" type="continuous">
+      <parent link="${name}-qy"/>
+      <child link="${name}-base" />
+      <axis xyz="0 0 1" />
+    </joint>    
+    
+  </xacro:macro>
+
+</robot>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>                                          
+<root>                                                                          
+  <channels>                                                                    
+    <channel name="lcm_channel" value="udpm://239.255.76.67:7667?ttl=1"/>       
+    <channel name="lcm_process_stop_channel" value="PROCESS_STOP_ROCBOT"/>      
+    <channel name="lcm_geometry_channel" value="GEOMETRY_ROCBOT"/>              
+    <channel name="lcm_model_channel" value="MODEL_ROCBOT"/>                    
+    <channel name="lcm_state_model_channel" value="STATE_MODEL_ROCBOT"/>        
+    <channel name="lcm_pose_set_channel" value="POSE_SET_ROCBOT"/>              
+    <channel name="lcm_command_controller_channel" value="COMMAND_CONTROLLER_ROCBOT"/>
+    <channel name="lcm_command_channel" value="COMMAND_ROCBOT"/>                
+    <channel name="lcm_stop_channel" value="STOP_ROCBOT"/>                      
+    <channel name="lcm_action_channel" value="ACTION_ROCBOT"/>                  
+    <channel name="lcm_trajectory_channel" value="TRAJECTORY_ROCBOT"/>          
+    <channel name="lcm_trajectory_complete_channel" value="TRAJECTORY_COMPLETE_ROCBOT"/>
+    <channel name="lcm_constraint_set_channel" value="CONSTRAINT_SET_ROCBOT"/>  
+    <channel name="lcm_geometry_request_channel" value="GEOMETRY_REQUEST_ROCBOT"/>
+    <channel name="lcm_model_request_channel" value="MODEL_REQUEST_ROCBOT"/>    
+    <channel name="lcm_redraw_channel" value="REDRAW_ROCBOT"/>                  
+    <channel name="lcm_render_channel" value="RENDER_ROCBOT"/>                  
+    <channel name="lcm_render_complete_channel" value="RENDER_COMPLETE_ROCBOT"/>
+    <channel name="lcm_contact_points_channel" value="CONTACT_POINTS_ROCBOT"/>  
+    <channel name="lcm_teleport_channel" value="TELEPORT_ROCBOT"/>              
+    <channel name="lcm_overlay_channel" value="OVERLAY_ROCBOT"/>                
+    <channel name="lcm_perception_request_channel" value="PERCEPTION_REQUEST_ROCBOT"/>
+    <channel name="lcm_perception_channel" value="PERCEPTION_ROCBOT"/>          
+    <channel name="lcm_left_gripper_open_channel" value="LEFT_GRIPPER_OPEN_ROCBOT"/>
+    <channel name="lcm_left_wing_channel" value="LEFT_WING_ROCBOT"/>            
+    <channel name="lcm_left_gripper_close_channel" value="LEFT_GRIPPER_CLOSE_ROCBOT"/>
+    <channel name="lcm_right_gripper_open_channel" value="RIGHT_GRIPPER_OPEN_ROCBOT"/>
+    <channel name="lcm_right_wing_channel" value="RIGHT_WING_ROCBOT"/>          
+    <channel name="lcm_right_zero_channel" value="RIGHT_ZERO_ROCBOT"/>          
+    <channel name="lcm_left_wing_channel" value="LEFT_WING_ROCBOT"/>            
+    <channel name="lcm_left_zero_channel" value="LEFT_ZERO_ROCBOT"/>            
+    <channel name="lcm_right_gripper_close_channel" value="RIGHT_GRIPPER_CLOSE_ROCBOT"/>
+    <channel name="lcm_gripper_complete_channel" value="GRIPPER_COMPLETE_ROCBOT"/>
+    <channel name="lcm_sequence_finished_channel" value="EXECUTIVE_SEQUENCE_FINISHED"/>
+    <channel name="lcm_add_joint_channel" value="ADD_JOINT_ROCBOT"/>            
+    <channel name="lcm_wm_distribution_channel" value="WORLD_MODEL_DISTRIBUTION"/>
+    <channel name="ros_joint_states_channel" value="/robot/joint_states"/>      
+    <channel name="ros_left_joint_command_channel" value="/robot/limb/left/joint_command"/>
+    <channel name="ros_right_joint_command_channel" value="/robot/limb/right/joint_command"/>
+    <channel name="ros_left_gripper_command_channel" value="/robot/end_effector/left_gripper/command"/>
+    <channel name="ros_left_gripper_state_channel" value="/robot/end_effector/left_gripper/state"/>
+    <channel name="ros_right_gripper_command_channel" value="/robot/end_effector/right_gripper/command"/>
+    <channel name="ros_right_gripper_state_channel" value="/robot/end_effector/right_gripper/state"/>
+    <!--channel name="ros_speech_recognition_channel" value="/speech_recognition"/-->
+    <channel name="ros_speech_recognition_channel" value="/speech_recognition"/>
+    <channel name="ros_sentence_tracker_channel" value="/sentence_tracker/parse_object_likelihoods"/>
+    <channel name="ros_symbol_grounding_channel" value="/symbol_grounding"/>    
+    <channel name="ros_sentence_tracker_service_channel" value="/sentence_tracker_service/parse_object_likelihoods"/>
+    <channel name="ros_speech_synthesis_channel" value="/speech_synthesis"/>    
+    <channel name="ros_sound_play_channel" value="/robotsound"/>                
+  </channels>                                                                   
+</root> 

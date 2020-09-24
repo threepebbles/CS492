@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<robot name="screw" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:include filename="$(find world_model_data)/data/models/xacro/common.xacro"/>
+  <xacro:macro name="screw" params="name parent length width height *origin">
+    <!-- LINKS -->
+    <link name="${name}-base">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 ${height/2.}"/>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+      <material name="test">
+        <color rgba="0.7 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="${length} ${width} ${height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="1.0" ixy="0.01" ixz="0.01" iyy="1.0" iyz="0.01" izz="1.0"/>
+    </inertial>
+    </link>
+    <link name="${name}-virtual1">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0 0 0"/>
+      </geometry>
+    </visual>
+    </link>
+    <link name="${name}-virtual2">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <box size="0 0 0"/>
+      </geometry>
+    </visual>
+    </link>
+    <!-- ============== JOINTS  ==========================================-->
+    <!-- Prismatic along x-axis -->
+    <joint name="${name}_base_pr_x" type="prismatic">
+      <!--insert_block name="origin" /--> 
+      <parent link="${parent}"/>
+      <child link="${name}-virtual1" />
+      <axis xyz="1 0 0"/>
+      <limit effort="1000.0" lower="-1000" upper="1000" velocity="100"/>
+    </joint>
+    <!-- Prismatic along y-axis -->
+    <joint name="${name}_base_pr_y" type="prismatic">
+      <!--insert_block name="origin" /--> 
+      <parent link="${name}-virtual1"/>
+      <child link="${name}-virtual2" />
+      <axis xyz="0 1 0"/>
+      <limit effort="1000.0" lower="-1000" upper="1000" velocity="100"/>
+    </joint>
+    <!-- Prismatic along z-axis -->
+    <joint name="${name}_base_pr_z" type="prismatic">
+      <!--insert_block name="origin" /--> 
+      <parent link="${name}-virtual2"/>
+      <child link="${name}-base" />
+      <axis xyz="0 0 1"/>
+      <limit effort="1000.0" lower="-1000" upper="1000" velocity="100"/>
+    </joint>
+  </xacro:macro>
+</robot>

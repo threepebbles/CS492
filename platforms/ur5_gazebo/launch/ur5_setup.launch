@@ -1,9 +1,5 @@
 <?xml version="1.0"?>
-<launch>
-  <!-- Export env variable so that gazebo finds our models -->
-  <env name="GAZEBO_MODEL_PATH"
-       value="$(find ur5_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)" />
-  
+<launch>  
   <!-- Launch file parameters -->
   <arg name="paused"     default="true"/>
   <arg name="debug"      default="false"/>
@@ -12,6 +8,10 @@
   <arg name="world_name" default="$(find ur5_gazebo)/worlds/ur5_setup.world" />
   <arg name="2f_gripper"  default="true" />
   <arg name="hardwareInterface" default="PositionJointInterface" />
+  <arg name="gazebo_models" default="$(find ur5_gazebo)/models:$(optenv GAZEBO_MODEL_PATH)"/>
+
+  <!-- Export env variable so that gazebo finds our models -->
+  <env name="GAZEBO_MODEL_PATH" value="$(arg gazebo_models)"/>
   
   <!-- Start up simulated world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">

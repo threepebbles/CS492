@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+import rospy
+from robotiq_s_model_control_client.robotiq_s_model_control_client import RobotiqSModelControlClient
+
+rospy.init_node("activate_gripper")
+rospy.sleep(2.00)
+gripper = RobotiqSModelControlClient()
+rospy.sleep(2.00)
+gripper.activate()
+#rospy.sleep(10.00)
+gripper.set_grasping_mode(gripper.GM_pinch)
+#rospy.sleep(2.00)
+gripper.open()
+rospy.loginfo("activate gripper into GM_pinch mode")

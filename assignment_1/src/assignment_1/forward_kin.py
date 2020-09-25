@@ -5,6 +5,7 @@ import actionlib
 from control_msgs.msg import *
 from trajectory_msgs.msg import *
 from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
+import numpy as np
 
 client = None
 
@@ -49,7 +50,8 @@ def your_forward_kinematics(theta):
 
 
     # you can print out a pose message by filling followings
-    # please, do not import external library. 
+    # please, do not import external library like PyKDL 
+    # you can import math or numpy like default libraries. 
     ps = Pose()
     ps.position.x = 
     ps.position.y = 

@@ -96,7 +96,7 @@ def get_cum_T_list(theta):
     return np.array(T_cum)
 
 
-def get_jacobian_mat(theta, T_cum):
+def get_geometric_jacobian_mat(theta, T_cum):
     p = np.zeros((7, 3))
     for i in range(0, 7):
         p[i] = get_xyz_with_theta_T(theta, T_cum[i])
@@ -161,7 +161,7 @@ def move_position(goal_pose, init_joint):
     time_from_start = 0
     for i in range(1, len(pose_traj)):
         T_cum = get_cum_T_list(q)
-        J = get_jacobian_mat(q, T_cum)
+        J = get_geometric_jacobian_mat(q, T_cum)
         Jp = J[:3]
         J_inv = np.dot(Jp.T, np.linalg.inv(np.dot(Jp, Jp.T)))  # filled
 

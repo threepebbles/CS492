@@ -105,6 +105,21 @@ def your_forward_kinematics(theta, T):
 
     return ps
     
+# get homogeneous transformation matrix
+def get_cum_T(q):
+    T01 = get_T(0.089,   q[0],   0,        -np.pi/2    )
+    T12 = get_T(0.016,   q[1],   0.425,    0           )
+    T23 = get_T(0,       q[2],   0.392,    0           )
+    T34 = get_T(0.093,   q[3],   0,        -np.pi/2    )
+    T45 = get_T(0.095,   q[4],   0,        np.pi/2     )
+    T56 = get_T(0.24,    q[5],   0,        0           )
+    Ts = [np.identity(4), T01, T12, T23, T34, T45, T56]
+
+    T = np.identity(4)
+    for i in range(0, len(Ts)):
+        T = np.dot(T, Ts[i])
+
+    return T
 
 
 if __name__ == '__main__':
@@ -115,28 +130,17 @@ if __name__ == '__main__':
     main()
 
     # Problem 2- C.i
-
     theta = [0,-np.pi/2,np.pi/2,-np.pi/2,-np.pi/2,0]
+    T = get_cum_T(theta)
 
-    T01 = get_T(0.089,   theta[0],   0,        -np.pi/2    )
-    T12 = get_T(0.016,   theta[1],   0.425,    0           )
-    T23 = get_T(0,       theta[2],   0.392,    0           )
-    T34 = get_T(0.093,   theta[3],   0,        -np.pi/2    )
-    T45 = get_T(0.095,   theta[4],   0,        np.pi/2     )
-    T56 = get_T(0.24,    theta[5],   0,        0           )
-    Ts = [T01, T12, T23, T34, T45, T56]
-
-    T = np.identity(4)
-    for i in range(0, len(Ts)):
-        T = np.dot(T, Ts[i])
-        
     print your_forward_kinematics(theta, T)
     move(theta)
-    rospy.sleep(2)
+    rospy.sleep(5)
 
     # Problem 2- C.i    
     
-    # theta = [-np.pi/4, np.pi/4, np.pi/2, 0, 0, 0]
-    # print your_forward_kinematics(theta)
-    # move(theta)
+    theta = [-np.pi/4, -np.pi/4, np.pi/2, 0, 0, 0]
+    T = get_cum_T(theta)
+    print your_forward_kinematics(theta, T)
+    move(theta)
 

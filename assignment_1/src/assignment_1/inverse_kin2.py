@@ -13,7 +13,9 @@ JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
 
 
 def main():
-            
+    """ 
+    A function to setup a action clinet for sending commands
+    """            
     global client
     try:
         client = actionlib.SimpleActionClient('trajectory_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
@@ -28,11 +30,19 @@ def main():
 
 
 def move(angles):    
+    """ 
+    A function to send a joint configuration goal to the robot. 
+    This function waits for completing the commanded motion.
+
+    Parameters
+    ----------
+    angles : list
+        a list of joint angles. The joint order must be same as JOINT_NAMES. 
+    """
     g = FollowJointTrajectoryGoal()
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
     g.trajectory.points = [
-        ## JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(2.0)),
         JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(2.0))]
     client.send_goal(g)
     try:
@@ -44,23 +54,23 @@ def move(angles):
 
 
 def move_joint(angles):
-    JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
-                'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
-    
+    """ 
+    A function to send a joint configuration goal to the robot.
+    This function does not wait for completing the commanded motion.
+
+    Parameters
+    ----------
+    angles : list
+        a list of joint angles. The joint order must be same as JOINT_NAMES. 
+    """
     g = FollowJointTrajectoryGoal()
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
     g.trajectory.points = [
-        ## JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(2.0)),
-        JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(2.0))]
+        JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(5))]
     client.send_goal(g)
-    ## try:
-    ##     client.wait_for_result()
-    ## except KeyboardInterrupt:
-    ##     client.cancel_goal()
-    ##     raise
 
-
+    
 
 import forward_kin
 def get_xyz_with_theta_T(theta, T):
@@ -68,22 +78,7 @@ def get_xyz_with_theta_T(theta, T):
     return np.array([ps.position.x, ps.position.y, ps.position.z])
 
 
-def get_HTM(q):
-    T01 = forward_kin.get_T(0.089,   q[0],   0,        -np.pi/2    )
-    T12 = forward_kin.get_T(0.016,   q[1],   0.425,    0           )
-    T23 = forward_kin.get_T(0,       q[2],   0.392,    0           )
-    T34 = forward_kin.get_T(0.093,   q[3],   0,        -np.pi/2    )
-    T45 = forward_kin.get_T(0.095,   q[4],   0,        np.pi/2     )
-    T56 = forward_kin.get_T(0.24,    q[5],   0,        0           )
-    Ts = [np.identity(4), T01, T12, T23, T34, T45, T56]
-
-    T = np.identity(4)
-    for i in range(0, len(Ts)):
-        T = np.dot(T, Ts[i])
-
-    return T
-
-def get_cum_T(theta):
+def get_cum_T_list(theta):
     T01 = forward_kin.get_T(0.089,   theta[0],   0,        -np.pi/2    )
     T12 = forward_kin.get_T(0.016,   theta[1],   0.425,    0           )
     T23 = forward_kin.get_T(0,       theta[2],   0.392,    0           )
@@ -101,26 +96,46 @@ def get_cum_T(theta):
     return np.array(T_cum)
 
 
-def get_Jacobian_mat(theta, T_cum):
-    p = np.zeros((7, 3))
-    for i in range(0, 7):
-        p[i] = get_xyz_with_theta_T(theta, T_cum[i])
-    
-    z = np.zeros((7, 3))
-    for i in range(0, 7):
-        z[i] = T_cum[i][:3, 2]
-
-    J1 = np.cross(z[0], p[6]-p[0])
-    J2 = z[0]
-    for i in range(1, len(p)-1):
-        J1 = np.vstack((J1, np.cross(z[i], p[6]-p[i])))
-        J2 = np.vstack((J2, z[i]))
-    J = np.hstack((J1, J2))
-    J = J.T
+def get_jacobian_mat(theta, T_cum):
+    J = np.zeros((3, 6))
+    J[0][0] = (0.24*(np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) - np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.48*np.sin(theta[0])*np.sin(theta[3])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[4]) + (-0.095*np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) + 0.095*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.392*np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) + 0.19*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2])*np.cos(theta[3]) - 0.392*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]) - 0.425*np.sin(theta[0])*np.cos(theta[1]) + 0.24*np.sin(theta[0])*np.cos(theta[4]) + 0.109*np.sin(theta[0])
+    J[0][1] = (0.24*(np.sin(theta[1])*np.sin(theta[2])*np.cos(theta[0]) - np.sin(theta[1])*np.cos(theta[0])*np.cos(theta[2]))*np.cos(theta[3]) + 0.48*np.sin(theta[1])*np.sin(theta[3])*np.cos(theta[0])*np.cos(theta[2]))*np.cos(theta[4]) + (-0.095*np.sin(theta[1])*np.sin(theta[2])*np.cos(theta[0]) + 0.095*np.sin(theta[1])*np.cos(theta[0])*np.cos(theta[2]))*np.cos(theta[3]) + 0.392*np.sin(theta[1])*np.sin(theta[2])*np.cos(theta[0]) + 0.19*np.sin(theta[1])*np.cos(theta[0])*np.cos(theta[2])*np.cos(theta[3]) - 0.392*np.sin(theta[1])*np.cos(theta[0])*np.cos(theta[2]) - 0.425*np.sin(theta[1])*np.cos(theta[0])
+    J[0][2] = (0.24*(-np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) - np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.48*np.sin(theta[2])*np.sin(theta[3])*np.cos(theta[0])*np.cos(theta[1]))*np.cos(theta[4]) + (0.095*np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) + 0.095*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.19*np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[3]) - 0.392*np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) - 0.392*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2])
+    J[0][3] = (-0.24*(-np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) + np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3]) - 0.48*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2])*np.cos(theta[3]))*np.cos(theta[4]) - (0.095*np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) - 0.095*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3]) + 0.19*np.sin(theta[3])*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2])
+    J[0][4] = -(0.24*(-np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) + np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) - 0.48*np.sin(theta[3])*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[4]) + 0.24*np.sin(theta[4])*np.cos(theta[0])
+    J[0][5] = 0
+    J[1][0] = (0.24*(-np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) + np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) - 0.48*np.sin(theta[3])*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[4]) + (0.095*np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) - 0.095*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) - 0.24*np.sin(theta[0])*np.cos(theta[4]) - 0.109*np.sin(theta[0]) - 0.392*np.sin(theta[2])*np.cos(theta[0])*np.cos(theta[1]) - 0.19*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2])*np.cos(theta[3]) + 0.392*np.cos(theta[0])*np.cos(theta[1])*np.cos(theta[2]) + 0.425*np.cos(theta[0])*np.cos(theta[1])
+    J[1][1] = (0.24*(np.sin(theta[0])*np.sin(theta[1])*np.sin(theta[2]) - np.sin(theta[0])*np.sin(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.48*np.sin(theta[0])*np.sin(theta[1])*np.sin(theta[3])*np.cos(theta[2]))*np.cos(theta[4]) + (-0.095*np.sin(theta[0])*np.sin(theta[1])*np.sin(theta[2]) + 0.095*np.sin(theta[0])*np.sin(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.392*np.sin(theta[0])*np.sin(theta[1])*np.sin(theta[2]) + 0.19*np.sin(theta[0])*np.sin(theta[1])*np.cos(theta[2])*np.cos(theta[3]) - 0.392*np.sin(theta[0])*np.sin(theta[1])*np.cos(theta[2]) - 0.425*np.sin(theta[0])*np.sin(theta[1])
+    J[1][2] = (0.24*(-np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) - np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.48*np.sin(theta[0])*np.sin(theta[2])*np.sin(theta[3])*np.cos(theta[1]))*np.cos(theta[4]) + (0.095*np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) + 0.095*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.19*np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1])*np.cos(theta[3]) - 0.392*np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) - 0.392*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2])
+    J[1][3] = (-0.24*(-np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) + np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3]) - 0.48*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2])*np.cos(theta[3]))*np.cos(theta[4]) - (0.095*np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) - 0.095*np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3]) + 0.19*np.sin(theta[0])*np.sin(theta[3])*np.cos(theta[1])*np.cos(theta[2])
+    J[1][4] = -(0.24*(-np.sin(theta[0])*np.sin(theta[2])*np.cos(theta[1]) + np.sin(theta[0])*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) - 0.48*np.sin(theta[0])*np.sin(theta[3])*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[4]) - 0.24*np.sin(theta[4])*np.cos(theta[0])
+    J[1][5] = 0
+    J[2][0] = 0
+    J[2][1] = (0.24*(np.sin(theta[1])*np.sin(theta[2]) - np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.24*(np.sin(theta[1])*np.cos(theta[2]) + np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3]))*np.cos(theta[4]) + (-0.095*np.sin(theta[1])*np.sin(theta[2]) + 0.095*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + (0.095*np.sin(theta[1])*np.cos(theta[2]) + 0.095*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.392*np.sin(theta[1])*np.sin(theta[2]) - 0.392*np.cos(theta[1])*np.cos(theta[2]) - 0.425*np.cos(theta[1])
+    J[2][2] = (0.24*(-np.sin(theta[1])*np.sin(theta[2]) + np.sin(theta[2])*np.cos(theta[1]))*np.sin(theta[3]) + 0.24*(np.sin(theta[1])*np.sin(theta[2]) - np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]))*np.cos(theta[4]) + (-0.095*np.sin(theta[1])*np.sin(theta[2]) + 0.095*np.sin(theta[2])*np.cos(theta[1]))*np.cos(theta[3]) + (-0.095*np.sin(theta[1])*np.sin(theta[2]) + 0.095*np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]) + 0.392*np.sin(theta[1])*np.sin(theta[2]) - 0.392*np.cos(theta[1])*np.cos(theta[2])
+    J[2][3] = (-0.24*(-np.sin(theta[1])*np.cos(theta[2]) - np.sin(theta[2])*np.cos(theta[1]))*np.sin(theta[3]) + 0.24*(np.sin(theta[1])*np.cos(theta[2]) - np.cos(theta[1])*np.cos(theta[2]))*np.cos(theta[3]))*np.cos(theta[4]) - (0.095*np.sin(theta[1])*np.cos(theta[2]) + 0.095*np.sin(theta[2])*np.cos(theta[1]))*np.sin(theta[3]) - (0.095*np.sin(theta[1])*np.cos(theta[2]) - 0.095*np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3])
+    J[2][4] = -(0.24*(-np.sin(theta[1])*np.cos(theta[2]) - np.sin(theta[2])*np.cos(theta[1]))*np.cos(theta[3]) + 0.24*(np.sin(theta[1])*np.cos(theta[2]) - np.cos(theta[1])*np.cos(theta[2]))*np.sin(theta[3]))*np.sin(theta[4])
+    J[2][5] = 0
 
     return J
 
+
 def move_position(goal_pose, init_joint):
+    """ 
+    A function to send a pose goal for generating a straight motion.
+
+    Parameters
+    ----------
+    goal_pose : Pose
+        a Pose object that contain a desired end-effector position 
+    init_joint : list
+        a list of current joint angles. The joint order must be same as JOINT_NAMES
+
+    Returns
+    -------
+    q : list
+        a list of joint angles after moving the robot.
+    """
     g = FollowJointTrajectoryGoal()
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
@@ -128,12 +143,11 @@ def move_position(goal_pose, init_joint):
     #------------------------------------------------------------
     # ADD YOUR CODE
     #------------------------------------------------------------
-
     # construct forward kinematics (problem 2)
-    
+
     # Get start position and joint angles
     theta = np.array(init_joint) # added
-    T = get_HTM(theta)
+    T = forward_kin.get_cum_T(theta)
     x_c = get_xyz_with_theta_T(theta, T) # added, error can be caused
 
     # Get a position trajectory
@@ -150,10 +164,8 @@ def move_position(goal_pose, init_joint):
     dt = 0.05
     time_from_start = 0
     for i in range(1, len(pose_traj)):
-        T_cum = get_cum_T(q)
-        T = T_cum[6]
-        
-        J = get_Jacobian_mat(q, T_cum)
+        T_cum = get_cum_T_list(q)
+        J = get_jacobian_mat(q, T_cum)
         Jp = J[:3]
         J_inv = np.dot(Jp.T, np.linalg.inv(np.dot(Jp, Jp.T)))  # filled
 
@@ -161,10 +173,7 @@ def move_position(goal_pose, init_joint):
         dtheta = np.dot(J_inv, dx)
         
         q = q + dtheta
-
-        T_cum = get_cum_T(q)
-        T = T_cum[6]
-        x_c = get_xyz_with_theta_T(q, T) # added
+        x_c = get_xyz_with_theta_T(q, forward_kin.get_cum_T(q)) # added
 
         time_from_start = time_from_start + dt
         g.trajectory.points.append(
@@ -172,11 +181,11 @@ def move_position(goal_pose, init_joint):
             )        
     #------------------------------------------------------------
     client.send_goal(g)
-    # try:
-    #     client.wait_for_result()
-    # except KeyboardInterrupt:
-    #     client.cancel_goal()
-    #     raise
+    try:
+        client.wait_for_result()
+    except KeyboardInterrupt:
+        client.cancel_goal()
+        raise
 
     return q
 
@@ -191,24 +200,18 @@ if __name__ == '__main__':
     # Problem 3
     theta = [-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0]
     move_joint(theta)
-    #print your_forward_kinematics(theta) #by importing your forward kinematics
-    
-    T_cum = get_cum_T(theta)
-    T = T_cum[6]
-    print forward_kin.your_forward_kinematics(theta, T)
-    rospy.sleep(5)
 
-    #rospy.spin()
-    
+    T = forward_kin.get_cum_T(theta)
+    print forward_kin.your_forward_kinematics(theta, T)
+    rospy.sleep(8)
+
+
     goal = Pose()
     goal.position.x = 0.487
     goal.position.y = 0.4
     goal.position.z = 0.274
 
     theta = move_position(goal, theta)
-    T_cum = get_cum_T(theta)
-    T = T_cum[6]
+    T = forward_kin.get_cum_T(theta)
     print forward_kin.your_forward_kinematics(theta, T)
-
-
 

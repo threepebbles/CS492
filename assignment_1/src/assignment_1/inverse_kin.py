@@ -78,23 +78,6 @@ def get_xyz_with_theta_T(theta, T):
     return np.array([ps.position.x, ps.position.y, ps.position.z])
 
 
-# get homogeneous transformation matrix
-def get_cum_T(q):
-    T01 = forward_kin.get_T(0.089,   q[0],   0,        -np.pi/2    )
-    T12 = forward_kin.get_T(0.016,   q[1],   0.425,    0           )
-    T23 = forward_kin.get_T(0,       q[2],   0.392,    0           )
-    T34 = forward_kin.get_T(0.093,   q[3],   0,        -np.pi/2    )
-    T45 = forward_kin.get_T(0.095,   q[4],   0,        np.pi/2     )
-    T56 = forward_kin.get_T(0.24,    q[5],   0,        0           )
-    Ts = [np.identity(4), T01, T12, T23, T34, T45, T56]
-
-    T = np.identity(4)
-    for i in range(0, len(Ts)):
-        T = np.dot(T, Ts[i])
-
-    return T
-
-
 def get_cum_T_list(theta):
     T01 = forward_kin.get_T(0.089,   theta[0],   0,        -np.pi/2    )
     T12 = forward_kin.get_T(0.016,   theta[1],   0.425,    0           )
@@ -160,7 +143,7 @@ def move_position(goal_pose, init_joint):
 
     # Get start position and joint angles
     theta = np.array(init_joint) # added
-    T = get_cum_T(theta)
+    T = forward_kin.get_cum_T(theta)
     x_c = get_xyz_with_theta_T(theta, T) # added, error can be caused
 
     # Get a position trajectory
@@ -178,8 +161,6 @@ def move_position(goal_pose, init_joint):
     time_from_start = 0
     for i in range(1, len(pose_traj)):
         T_cum = get_cum_T_list(q)
-        T = T_cum[6]
-        
         J = get_jacobian_mat(q, T_cum)
         Jp = J[:3]
         J_inv = np.dot(Jp.T, np.linalg.inv(np.dot(Jp, Jp.T)))  # filled
@@ -188,10 +169,7 @@ def move_position(goal_pose, init_joint):
         dtheta = np.dot(J_inv, dx)
         
         q = q + dtheta
-
-        T_cum = get_cum_T_list(q)
-        T = T_cum[6]
-        x_c = get_xyz_with_theta_T(q, T) # added
+        x_c = get_xyz_with_theta_T(q, forward_kin.get_cum_T(q)) # added
 
         time_from_start = time_from_start + dt
         g.trajectory.points.append(
@@ -219,10 +197,9 @@ if __name__ == '__main__':
     theta = [-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0]
     move_joint(theta)
 
-    T_cum = get_cum_T_list(theta)
-    T = T_cum[6]
+    T = forward_kin.get_cum_T(theta)
     print forward_kin.your_forward_kinematics(theta, T)
-    rospy.sleep(5)
+    rospy.sleep(8)
 
 
     goal = Pose()
@@ -231,7 +208,6 @@ if __name__ == '__main__':
     goal.position.z = 0.274
 
     theta = move_position(goal, theta)
-    T_cum = get_cum_T_list(theta)
-    T = T_cum[6]
+    T = forward_kin.get_cum_T(theta)
     print forward_kin.your_forward_kinematics(theta, T)
 

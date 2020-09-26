@@ -13,7 +13,9 @@ JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
 
 
 def main():
-            
+    """ 
+    A function to setup a action clinet for sending commands
+    """            
     global client
     try:
         client = actionlib.SimpleActionClient('trajectory_controller/follow_joint_trajectory', FollowJointTrajectoryAction)
@@ -28,11 +30,19 @@ def main():
 
 
 def move(angles):    
+    """ 
+    A function to send a joint configuration goal to the robot. 
+    This function waits for completing the commanded motion.
+
+    Parameters
+    ----------
+    angles : list
+        a list of joint angles. The joint order must be same as JOINT_NAMES. 
+    """
     g = FollowJointTrajectoryGoal()
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
     g.trajectory.points = [
-        ## JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(2.0)),
         JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(2.0))]
     client.send_goal(g)
     try:
@@ -44,24 +54,40 @@ def move(angles):
 
 
 def move_joint(angles):
-    JOINT_NAMES = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint',
-                'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
-    
+    """ 
+    A function to send a joint configuration goal to the robot.
+    This function does not wait for completing the commanded motion.
+
+    Parameters
+    ----------
+    angles : list
+        a list of joint angles. The joint order must be same as JOINT_NAMES. 
+    """
     g = FollowJointTrajectoryGoal()
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
     g.trajectory.points = [
-        ## JointTrajectoryPoint(positions=Q1, velocities=[0]*6, time_from_start=rospy.Duration(2.0)),
-        JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(2.0))]
+        JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(5))]
     client.send_goal(g)
-    ## try:
-    ##     client.wait_for_result()
-    ## except KeyboardInterrupt:
-    ##     client.cancel_goal()
-    ##     raise
 
+    
 
 def move_position(goal_pose, init_joint):
+    """ 
+    A function to send a pose goal for generating a straight motion.
+
+    Parameters
+    ----------
+    goal_pose : Pose
+        a Pose object that contain a desired end-effector position 
+    init_joint : list
+        a list of current joint angles. The joint order must be same as JOINT_NAMES
+
+    Returns
+    -------
+    q : list
+        a list of joint angles after moving the robot.
+    """
     g = FollowJointTrajectoryGoal()
     g.trajectory = JointTrajectory()
     g.trajectory.joint_names = JOINT_NAMES
@@ -111,14 +137,12 @@ if __name__ == '__main__':
     main()
 
     # Problem 3
-    theta = [0.516, -1.28, 1.27, -1.72, -1.62, 0]
+    theta = [-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0]
     move_joint(theta)
-    #print your_forward_kinematics(theta) #by importing your forward kinematics
-    #rospy.spin()
-    
+
     goal = Pose()
     goal.position.x = 0.487
-    goal.position.y = -0.4
+    goal.position.y = 0.4
     goal.position.z = 0.274
-    move_position(goal, theta)
+    theta = move_position(goal, theta)
 

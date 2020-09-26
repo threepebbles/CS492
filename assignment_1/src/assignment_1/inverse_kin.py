@@ -111,7 +111,7 @@ def move_position(goal_pose, init_joint):
         J_inv = 
 
         dx =         
-        dtheta = J_inv * dx
+        dtheta =  #J_inv * dx
 
         q = np.array(q)+np.array(dtheta)[:,0]
         time_from_start = time_from_start + dt

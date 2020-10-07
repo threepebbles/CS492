@@ -4,7 +4,7 @@ import rospy
 if __name__ == '__main__':
     rospy.init_node("test_1")
 
-    rospy.loginfo("This is loginfo!")
-    rospy.logwarn("This is warning!")
-    rospy.logerr("This is error!")
-    print "This is python printout!"
+    rospy.loginfo("This is log-information!")
+    rospy.logwarn("This is log-warning!")
+    rospy.logerr("This is log-error!")
+    print "These are ROS printouts!"

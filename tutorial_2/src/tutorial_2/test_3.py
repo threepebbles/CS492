@@ -22,7 +22,7 @@ if __name__ == '__main__':
     rospy.loginfo("Running ... ")
     rate = rospy.Rate(10) # 10hz
     while not rospy.is_shutdown():
-        ## ps.pose.position.x += 0.005
+        ps.pose.position.x += 0.005
         pub.publish(ps)
         rate.sleep()
     

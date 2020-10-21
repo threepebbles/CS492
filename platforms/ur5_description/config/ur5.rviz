@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /TF1
         - /TF1/Frames1
+        - /Pose1
       Splitter Ratio: 0.7361111044883728
     Tree Height: 1088
   - Class: rviz/Selection
@@ -185,6 +186,8 @@ Visualization Manager:
           Value: false
         forearm_link:
           Value: false
+        gripper_link:
+          Value: true
         robotiq_85_base_link:
           Value: true
         robotiq_85_left_finger_link:
@@ -240,6 +243,8 @@ Visualization Manager:
                         tool0:
                           robotiq_coupler:
                             robotiq_85_base_link:
+                              gripper_link:
+                                {}
                               robotiq_85_left_inner_knuckle_link:
                                 robotiq_85_left_finger_tip_link:
                                   {}
@@ -253,6 +258,21 @@ Visualization Manager:
                                 robotiq_85_right_finger_link:
                                   {}
       Update Interval: 0
+      Value: true
+    - Alpha: 1
+      Axes Length: 0.30000001192092896
+      Axes Radius: 0.009999999776482582
+      Class: rviz/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: Pose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Axes
+      Topic: /pose_viz
+      Unreliable: false
       Value: true
   Enabled: true
   Global Options:
@@ -297,10 +317,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.8653973340988159
+      Pitch: -0.04460209980607033
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.310394287109375
+      Yaw: 5.903575897216797
     Saved: ~
 Window Geometry:
   Displays:

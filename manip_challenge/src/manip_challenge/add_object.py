@@ -77,10 +77,11 @@ def add_cube(obj_name='o4', obj_type='cube',
     return
     
 
-def spawn_urdf_object(arg_list, object_name, object_pose):
+def spawn_urdf_object(arg_list, object_name, object_pose, name=None):
     """
     Add object to GAZEBO
     """
+    if name is None: name = object_name
     # get urdf(xml) from xacro
     opts, input_file_name = xacro.process_args(arg_list)
     xacro_output_memory = xacro.process_file(input_file_name, **vars(opts))
@@ -92,7 +93,7 @@ def spawn_urdf_object(arg_list, object_name, object_pose):
                                      SpawnModel)
 
     req = SpawnModelRequest()
-    req.model_name = object_name
+    req.model_name = name
     req.model_xml  = xml
     req.initial_pose = object_pose
     #req.reference_frame="world" # initial_pose is defined relative to the frame of this model/body
@@ -104,8 +105,9 @@ def spawn_urdf_object(arg_list, object_name, object_pose):
     rospy.set_param("world_description/"+object_name, xml)
     
 
-def spawn_sdf_object(object_name, xyzrpy):
+def spawn_sdf_object(object_name, xyzrpy, name=None):
     """ """
+    if name is None: name = object_name
     sdf_file = open(os.path.join(sdf_path, object_name, 'model.sdf'), 'r').read()
 
     object_pose = misc.list2Pose(xyzrpy)
@@ -113,9 +115,9 @@ def spawn_sdf_object(object_name, xyzrpy):
     rospy.wait_for_service('/gazebo/spawn_sdf_model')
     spawn_model = rospy.ServiceProxy('/gazebo/spawn_sdf_model',
                                      SpawnModel)    
-
+    
     req = SpawnModelRequest()
-    req.model_name = object_name
+    req.model_name = name
     req.model_xml  = sdf_file
     req.initial_pose = object_pose
     resp = spawn_model(req)

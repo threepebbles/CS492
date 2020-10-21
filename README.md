@@ -47,7 +47,7 @@ Make sure that if ROS_MASTER_URI and ROS_ROOT, ETC are setup.
 - [Tutorial II]()
 
 - [Assignment I](assignment_1/README.md)
-- [Assignment II]()
+- [Assignment II](assignment_2/README.md)
 - [Assignment III]()
 
 - [Manipulation Challenge](manip_challenge/README.md)

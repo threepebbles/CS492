@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # ---------------------------------------------------------------------
     # Check gripper functions
     # ---------------------------------------------------------------------
-    #arm.gripperOpen()
+    arm.gripperOpen(); 
     #arm.gripperClose()
     #arm.getGripperState()
 

@@ -45,15 +45,16 @@ def min_jerk(start, goal, dur, freq=100):
         # ------------------------------------------------------
         # Place your code here
         # ------------------------------------------------------
-        #t = 
+        t = 0.0 + i/(P-1.0)*(dur-0)
+
 
         time.append(t)
-        #X.append( )
-        #Xd.append( )
-        #Xdd.append( )
-        #Xddd.append( )
+        X.append( start + (goal-start)*( 10.0*(t/dur)**3 - 15.0*(t/dur)**4 + 6.0*(t/dur)**5 ))
+        Xd.append( start + (goal-start)*( 30.0*(t/dur)**2 - 60.0*(t/dur)**3 + 30.0*(t/dur)**4 ) )
+        Xdd.append( start + (goal-start)*( 60.0*(t/dur) - 180.0*(t/dur)**2 + 120.0*(t/dur)**3 ) )
+        Xddd.append( start + (goal-start)*(60.0/dur) - 360.0*(t/dur) + 360.0*(t/dur)**2)
         # ------------------------------------------------------
-
+        print(t, X[i])
     return time, np.array(X), np.array(Xd), np.array(Xdd), np.array(Xddd)
 
 

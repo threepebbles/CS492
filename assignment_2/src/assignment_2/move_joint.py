@@ -16,8 +16,7 @@ from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
 from assignment_1 import misc
 import quaternion
 
-#import min_jerk as mj
-import min_jerk_sol as mj
+import min_jerk as mj
 
 
 class ArmClient(object):

@@ -2,7 +2,7 @@
 
 Install new Python dependencies
 ~~~~bash
-cd "your catkin workspace"
+cd "your catkin workspace"/src/cs492_IIR/assignment_2
 sudo pip install -r requirements.txt
 ~~~~
 

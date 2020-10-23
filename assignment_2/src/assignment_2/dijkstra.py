@@ -13,7 +13,7 @@ class Node:
         self.prev_idx = prev_idx # previous node's index
 
     def __str__(self):
-        return str(self.x) + "," + str(self.cost) + "," + str(self.prev_idx)
+        return str(self.pos) + "," + str(self.cost) + "," + str(self.prev_idx)
 
 
 def get_grid_index(state, resolution, grid_limits, grid_dim):
@@ -146,19 +146,30 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
         # ADD YOUR CODE
         #------------------------------------------------------------
         # Break if reach to the goal
-        #if cur_idx == goal_node.idx :
-        # ...
+        if cur_idx == goal_node.idx:
+            closedset[cur_idx] = cur_node
+            break
         
         # Remove the item from the open set
         del openset[cur_idx]
         # Add it to the closed set
-        # ...
+        closedset[cur_idx] = cur_node
 
         # expand nodes based on available actions
-        #for i, action in enumerate(actions): 
-            #next_pos = cur_node.pos+action
-            # ...
-            
+        for i, action in enumerate(actions): 
+            next_pos = cur_node.pos + action
+            next_idx = get_grid_index(next_pos, resolution, grid_limits, grid_dim)
+
+
+            if is_valid(next_pos, grid_limits, obstacle_tree, robot_size)==False or next_idx in closedset:
+                continue
+            next_cost = cur_node.cost + np.linalg.norm(next_pos - cur_node.pos)
+
+            if next_idx in openset:
+                if(next_cost < openset[next_idx].cost):
+                    openset[next_idx] = Node(next_pos, next_idx, next_cost, cur_idx)
+            else:
+                openset[next_idx] = Node(next_pos, next_idx, next_cost, cur_idx)
         #------------------------------------------------------------
 
     # Track the path from goal to start
@@ -166,12 +177,11 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
     #------------------------------------------------------------
     # ADD YOUR CODE
     #------------------------------------------------------------
-    # ...
-    #while prev_idx != start_node.idx:
-    # ...
+    prev_idx = goal_node.idx
+    while prev_idx != start_node.idx:
+        cur_node = closedset[prev_idx]
+        path.append(cur_node.pos)
+        prev_idx = cur_node.prev_idx
     
     #------------------------------------------------------------
     return path[::-1]
-
-                
-

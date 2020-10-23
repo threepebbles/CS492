@@ -81,15 +81,17 @@ if __name__ == '__main__':
                                       resolution, grid_limits,
                                       obstacle_tree, robot_size)
     
+    # print(env.observation_space, env.action_space)
+    # print(env.action_space.low, env.action_space.high)
     for i, p in enumerate(path):
         if i==0: continue
         #------------------------------------------------------------
         # ADD YOUR CODE
         #------------------------------------------------------------
-        #action = 
+        action = path[i]-path[i-1]
         #------------------------------------------------------------
         env.render()
         env.step(action)
         ## env.step(env.action_space.sample())
-
+    input()
     env.close()

@@ -48,8 +48,8 @@ def get_grid_index(state, resolution, limits, grid_dim):
     else:
         return NotImplemented
     
-    if idx<0 or idx>=grid_dim[0]*grid_dim[1]*grid_dim[2]:
-        print("out of grid: {}".format(idx) )
+    #if idx<0 or idx>=grid_dim[0]*grid_dim[1]*grid_dim[2]:
+    #    print("out of grid: {}".format(idx) )
     return idx
 
 

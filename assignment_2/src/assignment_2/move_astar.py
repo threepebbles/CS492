@@ -6,7 +6,7 @@ import PyKDL
 
 from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
 from assignment_1 import misc
-import quaternion
+import quaternion as qt
 
 from sklearn.neighbors import BallTree
 from manip_challenge import add_object as ao
@@ -97,23 +97,24 @@ def test(arm):
                                 obstacle_tree, robot_size)
     pos_traj = [np.array(start)] + path + [np.array(goal)]
 
-    
     # smoothing if you can
     # ...
     
+    traj_len = len(pos_traj)
     pose_traj = []
+
     for i, pos in enumerate(pos_traj):
         p = Pose()
         # ------------------------------------------------------
         # Place your code here
         # ------------------------------------------------------
         # position
-        #p.position.x = ...
-        #p.position.y = ...
-        #p.position.z = ...
+        p.position.x = pos[0]
+        p.position.y = pos[1]
+        p.position.z = pos[2]
         
         # orientation (You can use the SLERP function in quaternion.py)
-        #p.orientation = ...
+        p.orientation = qt.slerp(start_pose.orientation, goal_pose.orientation, (i+1.0)/traj_len)
         # ------------------------------------------------------
         pose_traj.append(p)
     

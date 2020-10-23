@@ -255,7 +255,7 @@ class ArmClient(object):
             dq = np.dot(J_inv, e_p).reshape(-1)
             q = q + dq
             qs.append(q)
-            dqs.append(dq)
+            dqs.append(dq/(t-time[i-1]))
             x_c = self.fk_request(q, attach_tool=True)
             # ------------------------------------------------------
             
@@ -355,14 +355,14 @@ class ArmClient(object):
             q = q + dq
 
             qs.append(q)
-            dqs.append(dq)
+            dqs.append(dq/(t-time[i-1]))
             x_c = self.fk_request(q, attach_tool=True)
             # ------------------------------------------------------
             g.trajectory.points.append(
                 JointTrajectoryPoint(positions=q,
                                          velocities=[0]*6,
                                          time_from_start=rospy.Duration(t))
-                )                    
+                )
             
         self.client.send_goal(g)
         try:
@@ -394,7 +394,7 @@ class ArmClient(object):
         for i, pose in enumerate(poses):
             p = Pose()            
             # detach the tool before applying inverse kinematics (if needed)
-            p = self.detachTool(p)
+            # p = self.detachTool(p)
             poses_new.append(p)
 
         g = FollowJointTrajectoryGoal()
@@ -403,34 +403,47 @@ class ArmClient(object):
         q = self.js_joint_position        
         time_from_start = 0
         
+        qs, dqs = [], [] # for plotting
+        x_c = self.fk_request(self.js_joint_position)
         for i, t in enumerate(time):
             if i==0: continue
-
-            prev_frame = misc.pose2KDLframe(poses[i-1])
-            frame      = misc.pose2KDLframe(poses[i])
-                            
+            
+            # PyKDL.Frame: [[rotation matrix], [x,y,z]]
+            prev_frame = misc.pose2KDLframe(poses[i-1]) # prev_frame.M: current rotation matrix, R
+            frame      = misc.pose2KDLframe(poses[i]) # frame.M: desired rotation matrix. R_d
+            
             # ------------------------------------------------------
             # Place your code here
             # ------------------------------------------------------
-            # get delta position
-            # ...
+            # get delta position, error of position
+            e_p = np.squeeze(np.array([poses[i].position.x - x_c.position.x, 
+                poses[i].position.y - x_c.position.y, 
+                poses[i].position.z - x_c.position.z]))
             
-            # get delta orientation
-            # ...
-                            
+            # get delta orientation, error of orientation
+            e_o = np.asarray((frame.M * prev_frame.M.Inverse()).GetEulerZYX())
+            
             # get a jacobian
             J = self.arm_kdl.jacobian(q)
+            J = np.squeeze(np.asarray(J)) # numpy.matrix to numpy.ndarray
 
             # get a pseudo inverse of jacobian mtx
-            # ...
-            
-            #q = ...
+            # epsilon = 1e-9
+            # J_inv = np.dot(J.T, np.linalg.inv(np.dot(J, J.T) + epsilon*np.identity(7)))  # filled
+            J_inv = np.dot(J.T, np.linalg.inv(np.dot(J, J.T)))  # filled
+
+            dq = np.dot(J_inv, np.hstack([e_p, e_o])).reshape(-1)
+            q = q + dq
+
+            qs.append(q)
+            dqs.append(dq/(t-time[i-1]))
+            x_c = self.fk_request(q, attach_tool=True)
             # ------------------------------------------------------
             g.trajectory.points.append(
                 JointTrajectoryPoint(positions=q,
                                          velocities=[0]*6,
                                          time_from_start=rospy.Duration(t))
-                )                    
+                )
             
         self.client.send_goal(g)
         try:
@@ -439,7 +452,9 @@ class ArmClient(object):
             self.client.cancel_goal()
             raise
 
+        print_plt(time[1:], qs, dqs)
         
+
     def display_pose(self, pose):
         """ 
         A function that publish a topic to visualize the input pose.
@@ -523,26 +538,27 @@ def problem_1e(arm):
 y_titles = ["position", "vel", "acc", "jerk"]
 y_colors = ["r-", "g-", "b-", "c-"]
 def print_plt(X, *Ys):
-    row_num = 6 # the number of joints
-    col_num = len(Ys) # the number of ys (position, vel, acc, jerk)
-    fig = plt.figure(1)
+    # row_num = 6 # the number of joints
+    # col_num = len(Ys) # the number of ys (position, vel, acc, jerk)
+    # fig = plt.figure(1)
 
-    for i in range(row_num):
-        for j, Y in enumerate(Ys):
-            Y = np.array(Y)
+    # for i in range(row_num):
+    #     for j, Y in enumerate(Ys):
+    #         Y = np.array(Y)
 
-            ax = fig.add_subplot(row_num, col_num, i*col_num+j+1)
-            plt.plot(X, Y[:, j], y_colors[j], markersize=20)
-            plt.title("{} of joint[{}]".format(y_titles[j], i))
+    #         ax = fig.add_subplot(row_num, col_num, i*col_num+j+1)
+    #         plt.plot(X, Y[:, j], y_colors[j], markersize=20)
+    #         plt.title("{} of joint[{}]".format(y_titles[j], i))
         
     
-    plt.subplots_adjust(left = 0.1, 
-        bottom=0.1, 
-        right=0.9, 
-        top=0.9, 
-        wspace=0.5, 
-        hspace=2)
-    plt.show()
+    # plt.subplots_adjust(left = 0.1, 
+    #     bottom=0.1, 
+    #     right=0.9, 
+    #     top=0.9, 
+    #     wspace=0.5, 
+    #     hspace=2)
+    # plt.show()
+    return 0
 
         
 if __name__ == '__main__':
@@ -553,8 +569,13 @@ if __name__ == '__main__':
     arm = ArmClient()
 
     # Comment in/out the function you want
-    # problem_1b(arm) # clear
-    # problem_1c(arm) # clear
+    # print("problem 1b start")
+    # problem_1b(arm)
+    # print("problem 1b end")
+
+    print("problem 1c start")
+    problem_1c(arm)
+    print("problem 1c start")
     # print(arm.fk_request(arm.js_joint_position, attach_tool=True)) # added
 
     # problem 1d debug
@@ -596,11 +617,13 @@ if __name__ == '__main__':
     # a = np.array([1, 2, 3])
     # b = np.array([4,5,6,7])
     # print(np.hstack([a, b]))
+    print("problem 1d start")
+    problem_1d(arm) # SLERP
+    print("problem 1d end")
 
-    # problem_1d(arm) # SLERP
-
-    # problem_1e(arm) # minimum-jerk trajectory generation function, produce the joint trajectory via inverse kinematics
-
+    print("problem 1e start")
+    problem_1e(arm) # minimum-jerk trajectory generation function, produce the joint trajectory via inverse kinematics
+    print("problem 1d end")
     ## self.display_pose(goal_pose)
     ## rate = rospy.Rate(10) # 10hz
     ## while not rospy.is_shutdown():

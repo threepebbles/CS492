@@ -13,7 +13,7 @@ class Node:
         self.prev_idx = prev_idx # previous node's index
 
     def __str__(self):
-        return str(self.x) + "," + str(self.cost) + "," + str(self.prev_idx)
+        return str(self.pos) + "," + str(self.cost) + "," + str(self.prev_idx)
 
 
 def get_grid_index(state, resolution, grid_limits, grid_dim):

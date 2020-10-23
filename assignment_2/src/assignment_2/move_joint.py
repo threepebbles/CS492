@@ -14,10 +14,12 @@ from trajectory_msgs.msg import *
 from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
 
 from assignment_1 import misc
-import quaternion
+import quaternion as qt
 
 import min_jerk as mj
-
+# ------------------------------
+import matplotlib.pyplot as plt
+# ------------------------------
 
 class ArmClient(object):
 
@@ -153,24 +155,29 @@ class ArmClient(object):
         duration : float
             time duration
         """
-        time, pos, vel, _, _, = \
+        time, pos, vel, _acc, _jerk, = \
           mj.min_jerk(self.js_joint_position, angles, duration)
 
         g                        = FollowJointTrajectoryGoal()
         g.trajectory             = JointTrajectory()
         g.trajectory.joint_names = self.js_joint_name
-        g.trajectory.points      = []
+        g.trajectory.points      = [
+            # JointTrajectoryPoint(positions=angles, velocities=[0]*6, time_from_start=rospy.Duration(5.0))
+        ]
         # ------------------------------------------------------
         # Place your code here
         # ------------------------------------------------------
-        #for ... 
-        #    g.trajectory.points.append( 
-        #        JointTrajectoryPoint(
-        #                             positions= ...,
-        #                             velocities= ...,
-        #                             time_from_start=rospy.Duration(...))
-        #                            )
+        
+        for i in range(len(time)):
+            g.trajectory.points.append( 
+                JointTrajectoryPoint(
+                                    positions= pos[i],
+                                    velocities= vel[i],
+                                    time_from_start=rospy.Duration(time[i]))
+                                   )
+
         # ------------------------------------------------------
+
         self.client.send_goal(g)
         try:
             self.client.wait_for_result()
@@ -178,7 +185,9 @@ class ArmClient(object):
             self.client.cancel_goal()
             raise
 
+        print_plt(time, pos, vel, _acc, _jerk)
         
+
     def move_position(self, pose, duration=5.):
         """ 
         A function that moves the end effector to a target position 
@@ -200,6 +209,7 @@ class ArmClient(object):
         # Get a sequence of path variables from the min jerk trajectory planning
         time, progress, _, _, _, = mj.min_jerk([0], [1], duration)
 
+        
         # get a trajectory by interpolating from the start and the goal
         poses = []
         for i, p in enumerate(progress):
@@ -208,9 +218,10 @@ class ArmClient(object):
             # Place your code here
             # ------------------------------------------------------
             # position
-            #pose.position.x = ...
-            #pose.position.y = ...
-            #pose.position.z = ...
+            pose.position.x = start_pose.position.x + (goal_pose.position.x - start_pose.position.x)*p
+            pose.position.y = start_pose.position.y + (goal_pose.position.y - start_pose.position.y)*p
+            pose.position.z = start_pose.position.z + (goal_pose.position.z - start_pose.position.z)*p
+
             # ------------------------------------------------------
             poses.append(pose)
 
@@ -220,7 +231,9 @@ class ArmClient(object):
         g.trajectory.joint_names = self.js_joint_name            
         q                        = self.js_joint_position        
         time_from_start          = 0
-        
+
+        qs, dqs = [], []
+        x_c = start_pose
         for i, t in enumerate(time):
             if i==0: continue
                             
@@ -229,16 +242,21 @@ class ArmClient(object):
             # ------------------------------------------------------
             # get delta position
             # ...
+            e_p = np.array([poses[i].position.x - x_c.position.x, poses[i].position.y - x_c.position.y, poses[i].position.z - x_c.position.z])
             
             # get a jacobian
             J = self.arm_kdl.jacobian(q)
-            J = J[:3]
-
+            J = np.array(J[:3])
+            
             # get a pseudo inverse of jacobian mtx
-            # ...
-            
-            
-            #q = ... 
+            J_inv = np.dot(J.T, np.linalg.inv(np.dot(J, J.T)))  # filled
+           
+
+            dq = np.dot(J_inv, e_p).reshape(-1)
+            q = q + dq
+            qs.append(q)
+            dqs.append(dq)
+            x_c = self.fk_request(q, attach_tool=True)
             # ------------------------------------------------------
             
             g.trajectory.points.append(
@@ -246,13 +264,15 @@ class ArmClient(object):
                                          velocities=[0]*6,
                                          time_from_start=rospy.Duration(t))
                 )                    
-            
+
         self.client.send_goal(g)
         try:
             self.client.wait_for_result()
         except KeyboardInterrupt:
             self.client.cancel_goal()
             raise
+
+        print_plt(time[1:], qs, dqs)
 
 
     def move_pose(self, pose, duration=5.):
@@ -283,48 +303,60 @@ class ArmClient(object):
             # Place your code here
             # ------------------------------------------------------
             # position
-            #pose.position.x = ...
-            #pose.position.y = ...
-            #pose.position.z = ...
+            pose.position.x = start_pose.position.x + (goal_pose.position.x - start_pose.position.x)*p
+            pose.position.y = start_pose.position.y + (goal_pose.position.y - start_pose.position.y)*p
+            pose.position.z = start_pose.position.z + (goal_pose.position.z - start_pose.position.z)*p
             
             # orientation (You can use the SLERP function in quaternion.py)
-            #pose.orientation = ...
+            pose.orientation = qt.slerp(start_pose.orientation, goal_pose.orientation, p)
             # ------------------------------------------------------
             
             # detach the tool before applying inverse kinematics (if needed)
-            pose = self.detachTool(pose)
+            # pose = self.detachTool(pose)
             poses.append(pose)
-
+        
 
         g = FollowJointTrajectoryGoal()
         g.trajectory = JointTrajectory()
-        g.trajectory.joint_names = self.js_joint_name            
-        q = self.js_joint_position        
+        g.trajectory.joint_names = self.js_joint_name
+        q = self.js_joint_position # joint angles
         time_from_start = 0
         
+        qs, dqs = [], [] # for plotting
+        x_c = start_pose
         for i, t in enumerate(time):
             if i==0: continue
-
-            prev_frame = misc.pose2KDLframe(poses[i-1])
-            frame      = misc.pose2KDLframe(poses[i])
-                            
+            
+            # PyKDL.Frame: [[rotation matrix], [x,y,z]]
+            prev_frame = misc.pose2KDLframe(poses[i-1]) # prev_frame.M: current rotation matrix, R
+            frame      = misc.pose2KDLframe(poses[i]) # frame.M: desired rotation matrix. R_d
+            
             # ------------------------------------------------------
             # Place your code here
             # ------------------------------------------------------
-            # get delta position
-            # ...
-
-            # get delta orientation
-            # ...
-                            
+            # get delta position, error of position
+            e_p = np.squeeze(np.array([poses[i].position.x - x_c.position.x, 
+                poses[i].position.y - x_c.position.y, 
+                poses[i].position.z - x_c.position.z]))
+            
+            # get delta orientation, error of orientation
+            e_o = np.asarray((frame.M * prev_frame.M.Inverse()).GetEulerZYX())
+            
             # get a jacobian
             J = self.arm_kdl.jacobian(q)
+            J = np.squeeze(np.asarray(J)) # numpy.matrix to numpy.ndarray
 
             # get a pseudo inverse of jacobian mtx
-            # ...
-            
-            
-            #q = ...
+            # epsilon = 1e-9
+            # J_inv = np.dot(J.T, np.linalg.inv(np.dot(J, J.T) + epsilon*np.identity(7)))  # filled
+            J_inv = np.dot(J.T, np.linalg.inv(np.dot(J, J.T)))  # filled
+
+            dq = np.dot(J_inv, np.hstack([e_p, e_o])).reshape(-1)
+            q = q + dq
+
+            qs.append(q)
+            dqs.append(dq)
+            x_c = self.fk_request(q, attach_tool=True)
             # ------------------------------------------------------
             g.trajectory.points.append(
                 JointTrajectoryPoint(positions=q,
@@ -338,6 +370,8 @@ class ArmClient(object):
         except KeyboardInterrupt:
             self.client.cancel_goal()
             raise
+
+        print_plt(time[1:], qs, dqs)
 
         
     def move_pose_trajectory(self, poses, duration=5.):
@@ -437,7 +471,6 @@ def problem_1b(arm):
         
 def problem_1c(arm):
     """Problem 1. C: position trajectory """
-
     arm.move_joint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
     ## print arm.fk_request(arm.js_joint_position)
         
@@ -457,17 +490,21 @@ def problem_1d(arm):
 
     arm.move_joint([0, -1.57, 1.57, -1.57, -1.57, 0])
     start_pose = arm.fk_request(arm.js_joint_position)
+    # print("start:", start_pose)
 
     goal_frame = misc.pose2KDLframe(start_pose)
     goal_frame.M = PyKDL.Rotation.RPY(np.pi/4.,0,0)*goal_frame.M
+    # goal_frame.M = PyKDL.Rotation.RPY(0,np.pi/4.,0)*goal_frame.M
+    # goal_frame.M = PyKDL.Rotation.RPY(0,0,np.pi/4.)*goal_frame.M
     goal_pose = misc.KDLframe2Pose(goal_frame)
-
-    arm.move_pose(goal_pose, duration=3.)
-
     
+    # print("goal:", goal_pose)
+    arm.move_pose(goal_pose, duration=3.)
+    # print(arm.fk_request(arm.js_joint_position))
+    
+
 def problem_1e(arm):
     """Problem 1. E: pose trajectory """
-
     arm.move_joint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
     ## print arm.fk_request(arm.js_joint_position)
         
@@ -481,7 +518,32 @@ def problem_1e(arm):
     goal_pose.orientation.w = 0 
     
     arm.move_pose(goal_pose, duration=3.)
+
+
+y_titles = ["position", "vel", "acc", "jerk"]
+y_colors = ["r-", "g-", "b-", "c-"]
+def print_plt(X, *Ys):
+    row_num = 6 # the number of joints
+    col_num = len(Ys) # the number of ys (position, vel, acc, jerk)
+    fig = plt.figure(1)
+
+    for i in range(row_num):
+        for j, Y in enumerate(Ys):
+            Y = np.array(Y)
+
+            ax = fig.add_subplot(row_num, col_num, i*col_num+j+1)
+            plt.plot(X, Y[:, j], y_colors[j], markersize=20)
+            plt.title("{} of joint[{}]".format(y_titles[j], i))
+        
     
+    plt.subplots_adjust(left = 0.1, 
+        bottom=0.1, 
+        right=0.9, 
+        top=0.9, 
+        wspace=0.5, 
+        hspace=2)
+    plt.show()
+
         
 if __name__ == '__main__':
     rospy.init_node("test_move", anonymous=True, disable_signals=True)
@@ -491,14 +553,53 @@ if __name__ == '__main__':
     arm = ArmClient()
 
     # Comment in/out the function you want
-    problem_1b(arm)
-    problem_1c(arm)
-    problem_1d(arm)
-    problem_1e(arm)
+    # problem_1b(arm) # clear
+    # problem_1c(arm) # clear
+    # print(arm.fk_request(arm.js_joint_position, attach_tool=True)) # added
 
+    # problem 1d debug
+    # myp = Pose()
+    # myp.position.x = 1
+    # myp.position.y = 6
+    # myp.position.z = 3
+    # myp.orientation.x = 1 
+    # myp.orientation.y = 0
+    # myp.orientation.z = 0 
+    # myp.orientation.w = 0 
+    # myframe = misc.pose2KDLframe(myp)
 
+    # myp2 = Pose()
+    # myp2.position.x = 1
+    # myp2.position.y = 5
+    # myp2.position.z = 3
+    # myp2.orientation.x = 0 
+    # myp2.orientation.y = 1 
+    # myp2.orientation.z = 0 
+    # myp2.orientation.w = 0 
+    # myframe2 = misc.pose2KDLframe(myp2)
+    # print(myframe.M)
+    # print(myframe2.M)
+    # print(myframe.M * myframe2.M.Inverse())
 
-    
+    # a = np.array([[1,0,0],
+    #     [0,-1,0],
+    #     [0,0,-1]])
+    # b = np.array([[-1,0,0],
+    #     [0,1,0],
+    #     [0,0,-1]])
+    # print(np.dot(a,np.linalg.inv(b)))
+
+    # # import operator
+    # res = np.asarray(map(operator.sub, myframe.M.GetEulerZYX(), myframe2.M.GetEulerZYX()))
+    # print("res:", res)
+    # print(res)
+    # a = np.array([1, 2, 3])
+    # b = np.array([4,5,6,7])
+    # print(np.hstack([a, b]))
+
+    # problem_1d(arm) # SLERP
+
+    # problem_1e(arm) # minimum-jerk trajectory generation function, produce the joint trajectory via inverse kinematics
 
     ## self.display_pose(goal_pose)
     ## rate = rospy.Rate(10) # 10hz

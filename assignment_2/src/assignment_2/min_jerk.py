@@ -47,7 +47,6 @@ def min_jerk(start, goal, dur, freq=100):
         # ------------------------------------------------------
         t = 0.0 + i/(P-1.0)*(dur-0)
 
-
         time.append(t)
         X.append( start + (goal-start)*( 10.0*(t/dur)**3 - 15.0*(t/dur)**4 + 6.0*(t/dur)**5 ))
         Xd.append( start + (goal-start)*( 30.0*(t/dur)**2 - 60.0*(t/dur)**3 + 30.0*(t/dur)**4 ) )
@@ -56,7 +55,7 @@ def min_jerk(start, goal, dur, freq=100):
         # ------------------------------------------------------
     
     # print(X)    
-    return time, np.array(X), np.array(Xd), np.array(Xdd), np.array(Xddd)
+    return np.array(time), np.array(X), np.array(Xd), np.array(Xdd), np.array(Xddd)
 
 
 if __name__ == '__main__':

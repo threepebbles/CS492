@@ -117,6 +117,7 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
         a list of coordinate values that is the shortest path from 
         the start to the goal.
     """
+    norm_ord = 2
     grid_dim = np.round((grid_limits[1]-grid_limits[0])/resolution+1).astype(int)
     
     openset, closedset = dict(), dict()
@@ -135,6 +136,10 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
     print("Start and goal indices: {} and {}".format(start_node.idx,
                                                          goal_node.idx))
 
+    # import matplotlib.pyplot as plt
+    # import sys
+    # env = kwargs['env']
+    # env.render()
     while True:
         # Empty openset
         if len(openset) == 0: return None
@@ -155,6 +160,11 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
         # Add it to the closed set
         closedset[cur_idx] = cur_node
 
+        # plot in real time
+        # ids = np.round((cur_node.pos-grid_limits[0])/resolution).astype(int)
+        # plt.plot(ids[0], ids[1], '.r')
+        # plt.pause(0.00001)
+
         # expand nodes based on available actions
         for i, action in enumerate(actions): 
             next_pos = cur_node.pos + action
@@ -163,8 +173,8 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
 
             if is_valid(next_pos, grid_limits, obstacle_tree, robot_size)==False or next_idx in closedset:
                 continue
-            next_cost = cur_node.cost + np.linalg.norm(next_pos - cur_node.pos)
 
+            next_cost = cur_node.cost + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord)
             if next_idx in openset:
                 if(next_cost < openset[next_idx].cost):
                     openset[next_idx] = Node(next_pos, next_idx, next_cost, cur_idx)
@@ -184,4 +194,4 @@ def dijkstra_planning(start, goal, actions, resolution, grid_limits,
         prev_idx = cur_node.prev_idx
     
     #------------------------------------------------------------
-    return path[::-1]
+    return path[::-1], closedset

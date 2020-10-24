@@ -92,13 +92,13 @@ def test(arm):
                                           grid_limits )
 
     # run the planning algorithm
-    path = astar.astar_planning(start_on_grid, goal_on_grid, actions,
+    path, closedset = astar.astar_planning(start_on_grid, goal_on_grid, actions,
                                 resolution, grid_limits,
                                 obstacle_tree, robot_size)
     pos_traj = [np.array(start)] + path + [np.array(goal)]
 
     # smoothing if you can
-    # ...
+    # ...y
     
     traj_len = len(pos_traj)
     pose_traj = []

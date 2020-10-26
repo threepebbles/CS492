@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     print "----------------------------------------------"
     rospy.sleep(1.0)
-    pub = rospy.Publisher('/task_commands', String, queue_size=10)
+    pub = rospy.Publisher('/task_commands', String, queue_size=10, latch=True)
     rospy.sleep(1.0)
 
 
@@ -20,3 +20,4 @@ if __name__ == '__main__':
 
     pub.publish(json.dumps(d, encoding='ascii'))
     rospy.sleep(1.0)
+    rospy.spin()

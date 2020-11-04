@@ -69,9 +69,7 @@ if __name__ == '__main__':
     
     _, trj, trj_vel, trj_acc, trj_jerk = min_jerk(start, goal, duration, freq)
 
-    # ------------------------------------------------------
-    # Place your code here to visualize the trajectories
-    # ------------------------------------------------------
+
     length = len(trj)
 
     import matplotlib.pyplot as plt
@@ -91,5 +89,4 @@ if __name__ == '__main__':
         plt.plot(range(length), trj_jerk[:,i], 'r-', markersize=12)
         
     plt.show()
-    # ------------------------------------------------------
-    
+

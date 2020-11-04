@@ -9,7 +9,7 @@
   <!-- Gripper Link -->
   <link name="gripper_link" />
   <joint name="gripper_joint" type="fixed">
-    <origin xyz="0.15 0.003 0" rpy="${pi/2.0} 0 ${pi/2.0}" />
+    <origin xyz="0.15 0.003 0" rpy="0 -${pi/2.0} 0 " />
     <parent link="robotiq_85_base_link"/>
     <child link="gripper_link"/>
   </joint>

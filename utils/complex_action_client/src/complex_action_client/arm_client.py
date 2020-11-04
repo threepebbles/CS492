@@ -298,6 +298,7 @@ class ArmClient(object):
 
         
     def fk_request(self, joints, attach_tool=True):
+        """ A function to compute forward kinematics. """
         homo_mat = self.arm_kdl.forward(joints)
         pos, quat = PoseConv.to_pos_quat(homo_mat)
         pose = misc.list2Pose(list(pos)+list(quat))
@@ -576,19 +577,49 @@ class ArmClient(object):
         return GoalStatus.SUCCEEDED
 
 
-    def movePoint(self, points, **kwargs):        
+    def movePoint(self, point, **kwargs):        
         """
         Run a point-to-point movement in cartesian space w/o orientation control        
         """
+        rospy.logout('ArmClient: movePoint')
         return NotImplemented
 
-
+        
     def movePose(self, pose, timeout=1.0, no_wait=False, **kwargs):
         """
         Run a point-to-point movement in cartesian space
         The reference frame of the pose input is arm_baselink
         """
-        return NotImplemented
+        ee_ps    = self.detachTool(pose)
+        timeout /= self._timeout_scale
+
+        # IK
+        bx=5e-3; by=5e-3; bz=5e-3; brx=1e-2; bry=1e-2; brz=1e-2 
+        for i in range(10):
+            ik_goal = self.ik_request(ee_ps,
+                                      bx=bx, by=by, bz=bz,
+                                      brx=brx, bry=bry, brz=brz )
+            if ik_goal is not False: break
+            bx *= 3.; by *= 3.; bz *= 3.
+            brx *= 3.; bry *= 3.; brz *= 3.
+            
+        if ik_goal is False:
+            rospy.logerr("Maybe unreachable goal pose... ")
+            self._client.stop_tracking_goal() # to avoid returning the result of the previous'goal
+            return GoalStatus.REJECTED
+            ## return FollowJointTrajectoryResult.INVALID_GOAL
+            
+        position = [float(ik_goal[joint][0]) for joint in self._joint_names]
+
+        self._clear()
+        cur_positions = self.getDesJointAngles()
+        self._add_point(cur_positions, timeout=1e-3)
+        self._add_point(position, timeout=timeout)
+        if no_wait:
+            self._client.send_goal(self._goal)
+        else:
+            self._client.send_goal_and_wait(self._goal, rospy.Duration.from_sec(timeout))
+        return GoalStatus.SUCCEEDED
     
                 
     def movePoseStraight(self, pose, timeout=2.0, check_contact=False, no_wait=False, **kwargs):
@@ -616,10 +647,36 @@ class ArmClient(object):
     
     # -----------------------------------------------------------------------------------------
     def attachTool(self, pose):
+        """ 
+        A function to attach tool offset on the given pose.
+
+        Parameters
+        ----------
+        pose : geometry_msgs/Pose
+            a Pose object
+
+        Returns
+        -------
+        pose : geometry_msgs/Pose
+            a Pose object after attaching the tool offset
+        """
         tool_frame = misc.pose2KDLframe(pose) * self._tool_offset_frame
         return misc.KDLframe2Pose(tool_frame)
         
     def detachTool(self, pose):
+        """ 
+        A function to detach tool offset from the given pose.
+
+        Parameters
+        ----------
+        pose : geometry_msgs/Pose
+            a Pose object
+
+        Returns
+        -------
+        pose : geometry_msgs/Pose
+            a Pose object after detaching the tool offset
+        """
         ee_frame = misc.pose2KDLframe(pose) * self._tool_offset_frame.Inverse()
         return misc.KDLframe2Pose(ee_frame)
 

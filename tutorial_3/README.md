@@ -28,7 +28,7 @@ rosrun manip_challenge item_list_pub.py
 Repeat the manual planning and execution for placing, too!!!
 
 
-## Today's task!
+## Today's attendance quiz!
 1. Place the 'eraser' on the right storage
 2. Grasp the side of the 'glue'
 3. (Option) apply A*

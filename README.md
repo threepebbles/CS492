@@ -45,6 +45,7 @@ Make sure that if ROS_MASTER_URI and ROS_ROOT, ETC are setup.
 # Links 
 - [Tutorial I](tutorial_1/README.md)
 - [Tutorial II](tutorial_2/README.md)
+- [Tutorial III](tutorial_3/README.md)
 
 - [Assignment I](assignment_1/README.md)
 - [Assignment II](assignment_2/README.md)

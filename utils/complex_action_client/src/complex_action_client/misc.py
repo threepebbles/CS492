@@ -37,6 +37,10 @@ def pose2KDLframe(pose):
         
     return PyKDL.Frame(M, p)
 
+def pose2array(pose):
+    return np.array([pose.position.x, pose.position.y, pose.position.z, pose.orientation.x, pose.orientation.y, \
+            pose.orientation.z, pose.orientation.w] )
+
 def pose2list(pose):
     return (pose.position.x, pose.position.y, pose.position.z, pose.orientation.x, pose.orientation.y, \
             pose.orientation.z, pose.orientation.w )

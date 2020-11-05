@@ -6,8 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TF1
-        - /TF1/Frames1
         - /Pose1
       Splitter Ratio: 0.7361111044883728
     Tree Height: 1088
@@ -84,6 +82,10 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        gripper_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         robotiq_85_base_link:
           Alpha: 1
           Show Axes: false
@@ -189,7 +191,7 @@ Visualization Manager:
         gripper_link:
           Value: true
         robotiq_85_base_link:
-          Value: true
+          Value: false
         robotiq_85_left_finger_link:
           Value: false
         robotiq_85_left_finger_tip_link:
@@ -317,10 +319,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: -0.04460209980607033
+      Pitch: 0.3453978896141052
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.903575897216797
+      Yaw: 5.528576850891113
     Saved: ~
 Window Geometry:
   Displays:

@@ -12,8 +12,7 @@ from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 QUEUE_SIZE = 10
 
 def get_object_frame(target_object):
-    """ Return the object top surface frame wrt the world frame.
-    """
+    """ Return the object top surface frame wrt the world frame. """
     rospy.wait_for_service("get_object_pose")
     pose_srv_req = rospy.ServiceProxy("get_object_pose", String_Pose)
     
@@ -27,6 +26,7 @@ def get_object_frame(target_object):
 
 
 def get_base_frame():
+    """ Return the frame from world to base_link """
     # T from world to base_link
     listener = tf.TransformListener()
     rate = rospy.Rate(10.0)
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     grasp_ps = misc.KDLframe2Pose(base2obj)
     # --------------------------------------------------
 
-    # obtain a pre-grasping pose -----------------------
+    # compute a pre-grasping pose -----------------------
     pre_grasp_ps = copy.deepcopy(grasp_ps)
     pre_grasp_ps.position.z += 0.1
     # --------------------------------------------------
@@ -70,6 +70,8 @@ if __name__ == '__main__':
     # Initialize the UR5 control object
     arm = UR5ArmClient(timeout_scale=1., sim=True)
 
+
+    # A sequence of movement
     arm.moveJoint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
     arm.gripperOpen()
     arm.movePose(pre_grasp_ps, 4.)

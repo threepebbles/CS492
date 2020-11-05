@@ -13,6 +13,7 @@ def command_callback(msg):
     """
     d = json.loads(msg.data)
     print d
+    print d['storage_left']
 
 
 if __name__ == '__main__':

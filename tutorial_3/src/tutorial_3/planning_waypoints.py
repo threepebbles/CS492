@@ -61,7 +61,7 @@ if __name__ == '__main__':
                                             PoseStamped,
                                             queue_size=QUEUE_SIZE,
                                             latch=True)
-    target_object = 'soap'    
+    target_object = 'eraser'    
     world2base = get_base_frame()
 
     # compute grasping pose ----------------------------
@@ -85,9 +85,9 @@ if __name__ == '__main__':
 
     # A sequence of movement
     arm.moveJoint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
-    arm.gripperOpen()
+    arm.gripperOpen()   
     arm.movePose(pre_grasp_ps, 4.)
-    arm.movePose(grasp_ps, 4.)
+    arm.movePose(grasp_ps, 4.)    
     arm.gripperClose()
     arm.movePose(pre_grasp_ps, 4.)
     arm.moveJoint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])

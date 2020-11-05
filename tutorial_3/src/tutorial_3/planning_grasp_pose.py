@@ -41,12 +41,11 @@ if __name__ == '__main__':
     except rospy.ServiceException, e:
         print "Pose Service is not available: %s"%e
         
-    print obj_pose, height_pose
-
     # compute grasping pose ----------------------------
     obj_frame = misc.pose2KDLframe(obj_pose)
-    obj_frame.M.DoRotX(np.pi)
-    obj_frame.p += misc.pose2KDLframe(height_pose).p
+    #obj_frame.M.DoRotX(np.pi)
+    obj_frame *= misc.pose2KDLframe(height_pose)
+    obj_pose   = misc.KDLframe2Pose(obj_frame)
     obj_frame.p[2] -= 0.03
     grasp_pose = misc.KDLframe2Pose(obj_frame)
     # --------------------------------------------------

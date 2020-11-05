@@ -8,12 +8,7 @@ sudo pip install -r requirements.txt
 
 Then, update dependencies using rosinstall
 ~~~~bash
-cd "your catkin workspace"/src
-wstool init .
-wstool merge cs492_IIR/dependencies.rosinstall
-wstool update
-
-cd ..
+cd "your catkin workspace"
 source /opt/ros/melodic/setup.bash
 rosdep install --from-paths src --ignore-src --rosdistro=melodic -y
 catkin_make 

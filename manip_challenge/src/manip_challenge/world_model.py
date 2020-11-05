@@ -26,7 +26,7 @@ class GazeboParser():
         
         # Service
         rospy.Service('get_object_pose', String_Pose, self._object_pose_srv)
-        rospy.Service('get_object_grasp_pose', String_Pose, self._object_grasp_pose_srv)
+        ## rospy.Service('get_object_grasp_pose', String_Pose, self._object_grasp_pose_srv)
         rospy.Service('get_object_height', String_Pose, self._object_height_srv)
         rospy.Service('get_object_range', String_String, self._object_range_srv)
         rospy.Service('get_object_rnd_pose', String_Pose, self._object_rnd_pose_srv)
@@ -68,7 +68,7 @@ class GazeboParser():
     def _object_in_hand_srv(self, req):
         return NotImplemented
     
-    def get_pose_from_world(self, name, return_top=True, return_grip=False):
+    def get_pose_from_world(self, name, return_top=False, return_grip=False):
         """ Return a pair of position and quaternion as a list """
         
         with self._world_lock:

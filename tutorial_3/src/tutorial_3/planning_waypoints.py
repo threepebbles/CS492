@@ -22,7 +22,19 @@ def get_object_frame(target_object):
         print "Pose Service is not available: %s"%e
 
     world2obj  = misc.pose2KDLframe(obj_pose)
-    return world2obj 
+
+    # top offset
+    rospy.wait_for_service("get_object_height")
+    pose_srv_req = rospy.ServiceProxy("get_object_height", String_Pose)
+    
+    try:
+        obj_top = pose_srv_req(target_object).pose
+    except rospy.ServiceException, e:
+        print "Pose Service is not available: %s"%e
+
+    obj2top  = misc.pose2KDLframe(obj_top)
+    
+    return world2obj*obj2top
 
 
 def get_base_frame():

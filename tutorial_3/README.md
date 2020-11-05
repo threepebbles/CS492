@@ -2,7 +2,7 @@
 
 Run the following commands from two terminals:
 ~~~~bash
-roslaunch ur5_gazebo ur5_setup.launch
+roslaunch manip_challenge ur5_setup.launch
 roslaunch manip_challenge ur5_robotiq_2f85.launch
 ~~~~
 

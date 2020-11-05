@@ -19,14 +19,14 @@
         </material>
         <geometry>
           <mesh>
-            <uri>model://snacks/meshes/snacks.dae</uri>
+            <uri>model://snacks/meshes/snacks_aligned.dae</uri>
           </mesh>
         </geometry>
       </visual>
 
 
       <collision name="snacks_collision">
-        <pose>0.04 0.02 0.117 0 0 2.1</pose>
+        <pose>0.0 0.0 0.117 0 0 0</pose>
         <geometry>
           <box>
             <size>0.165 0.06 0.235</size>

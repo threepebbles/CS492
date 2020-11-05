@@ -19,14 +19,14 @@
         </material>
         <geometry>
           <mesh>
-            <uri>model://glue/meshes/glue.dae</uri>
+            <uri>model://glue/meshes/glue_aligned.dae</uri>
           </mesh>
         </geometry>
       </visual>
 
 
       <collision name="glue_collision">
-        <pose>0 0 0.067 0 0 -0.95</pose>
+        <pose>0 0 0.067 0 0 0</pose>
         <geometry>
           <box>
             <size>0.054 0.032 0.133</size>

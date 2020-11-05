@@ -6,6 +6,14 @@
   <xacro:include filename="$(find ur5_description)/urdf/ur5_joint_limited_robot.urdf.xacro" />
   <xacro:include filename="$(find robotiq_description)/urdf/robotiq_85_gripper.urdf.xacro" />
 
+  <!-- Gripper Link -->
+  <link name="gripper_link" />
+  <joint name="gripper_joint" type="fixed">
+    <origin xyz="0.15 0.003 0" rpy="0 -${pi/2.0} 0 " />
+    <parent link="robotiq_85_base_link"/>
+    <child link="gripper_link"/>
+  </joint>
+  
   
   <!-- Robotiq Coupler -->
   <!--  + Height added by the coupler: 8mm -->

@@ -79,8 +79,8 @@ class GazeboParser():
                 height = self.get_object_height(name)
                 ## offset = PyKDL.Frame(PyKDL.Rotation.Identity(),
                 ##                          PyKDL.Vector(0+0.003,0,height))                
-                offset = PyKDL.Frame(PyKDL.Rotation.RotZ(-np.pi/4.),
-                                         PyKDL.Vector(0,0,height))                
+                ## offset = PyKDL.Frame(PyKDL.Rotation.RotZ(-np.pi/4.),
+                offset = PyKDL.Frame(PyKDL.Vector(0,0,height))
                 frame *= offset
 
         return misc.KDLframe2List(frame)

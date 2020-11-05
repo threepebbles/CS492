@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     # Initialize variables
     start = [5.,55.]
-    goal  = [55.,5.]
+    goal  = [55.,10.]
     obstacles, obstacle_tree = generate_obstacles([0,60],[0,60])
     resolution  = 1.0
     robot_size = 0.5

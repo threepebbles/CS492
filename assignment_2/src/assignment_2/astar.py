@@ -211,21 +211,14 @@ def astar_planning(start, goal, actions, resolution, grid_limits,
                 continue 
 
             if next_idx in openset:
-                next_cost = cur_node.cost - cur_node.h + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord) + openset[next_idx].h
+                next_cost = (cur_node.cost - cur_node.h) + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord) + openset[next_idx].h
                 if(next_cost < openset[next_idx].cost):
                     openset[next_idx] = Node(next_pos, next_idx, next_cost, openset[next_idx].h, cur_idx)
             else:
                 next_h = np.linalg.norm(goal_node.pos - next_pos, ord=norm_ord)
-                next_cost = cur_node.cost - cur_node.h + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord) + next_h
+                next_cost = (cur_node.cost - cur_node.h) + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord) + next_h
                 openset[next_idx] = Node(next_pos, next_idx, next_cost, next_h, cur_idx)
 
-            # next_g = (cur_node.cost - cur_node.h) + np.linalg.norm(next_pos - cur_node.pos)
-            # if next_idx in openset:
-            #     if(next_g < openset[next_idx].cost - openset[next_idx].h):
-            #         openset[next_idx] = Node(next_pos, next_idx, next_g + openset[next_idx].h, next_h, cur_idx)
-            # else:
-            #     next_h = np.linalg.norm(goal_node.pos - next_pos)
-            #     openset[next_idx] = Node(next_pos, next_idx, next_g + next_h, next_h, cur_idx)
         #------------------------------------------------------------
 
     # Track the path from goal to start

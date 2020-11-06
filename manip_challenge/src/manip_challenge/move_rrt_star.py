@@ -11,31 +11,31 @@ from riro_srvs.srv import String_None, String_String, String_Pose, String_PoseRe
 
 import tf
 
-import rrt
+import rrt_star
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
-from gazebo_msgs.msg import ModelStates, LinkStates
-index_of_model_states = {'ground_plane':0, 'ur5_base':1, 'cafe_table':2, 'cafe_table_left':3, 'cafe_table_right':4, 'storage_left':5, 'storage_right':6, 'robot':7, 'book':8, 'eraser':9, 'snacks':10, 'soap2':11, 'biscuits':12, 'glue':13, 'soap':14}
+# from gazebo_msgs.msg import ModelStates, LinkStates
+# index_of_model_states = {'ground_plane':0, 'ur5_base':1, 'cafe_table':2, 'cafe_table_left':3, 'cafe_table_right':4, 'storage_left':5, 'storage_right':6, 'robot':7, 'book':8, 'eraser':9, 'snacks':10, 'soap2':11, 'biscuits':12, 'glue':13, 'soap':14}
 
 QUEUE_SIZE = 10
 
 # subscribe once
-def get_model_states(timeout=3.):
-    try:
-        msg = rospy.wait_for_message('/gazebo/model_states', ModelStates, timeout)
-        # msg = rospy.wait_for_message('/gazebo/link_states', LinkStates, timeout)
-        # print(len(msg.name))
-        # for idx, name in enumerate(msg.name):
-        #     print('\'{}\': {},'.format(name, idx), end=' ')
-        # print(msg.pose)
-        # pprint(dir(msg), indent=2)
-        # print(msg.pose[index_of_model_states[target_object]])
+# def get_model_states(timeout=3.):
+#     try:
+#         msg = rospy.wait_for_message('/gazebo/model_states', ModelStates, timeout)
+#         # msg = rospy.wait_for_message('/gazebo/link_states', LinkStates, timeout)
+#         # print(len(msg.name))
+#         # for idx, name in enumerate(msg.name):
+#         #     print('\'{}\': {},'.format(name, idx), end=' ')
+#         # print(msg.pose)
+#         # pprint(dir(msg), indent=2)
+#         # print(msg.pose[index_of_model_states[target_object]])
         
-    except ROSException as e:
-        rospy.logwarn('get_joint_state timed out after %1.1f s' % timeout)
+#     except ROSException as e:
+#         rospy.logwarn('get_joint_state timed out after %1.1f s' % timeout)
 
-    return msg
+#     return msg
 
 
 def get_object_frame(target_object):
@@ -138,39 +138,13 @@ if __name__ == '__main__':
     #arm.gripperClose()
     #arm.getGripperState()
 
-
-    # ---------------------------------------------------------------------
-    # Check joint movements
-    # ---------------------------------------------------------------------    
-    # Move Joints
-    #arm.moveJoint([0, 0, 0, -np.pi/2.0, 0, -np.pi/2.0], timeout=10.0)
-    #arm.moveJoint([np.pi/3, 0, 0, -np.pi/2.0, 0, -np.pi/2.0], timeout=10.0)
-
-
-    # ---------------------------------------------------------------------
-    # Check pick-and-place
-    # ---------------------------------------------------------------------       
-    
-    # arm.gripperOpen()
-    # arm.moveJoint([0, -np.pi/2., np.pi/2., -np.pi/2., -np.pi/2., np.pi/4.], timeout=5.0)
-    # arm.moveJoint([0.16170570835536457, -1.4298043774726588, 1.32243941822082, -1.4706636556410826, -1.5801858129904114, 0.16369705271839724], timeout=5.0)
-    # arm.moveJoint([0.16456877764159317, -1.4026709127086092, 1.6609417499881791, -1.829975190229056, -1.570936444921175, 0.16300417865254457], timeout=5.0)
-    
-    # arm.gripperClose()
-    # arm.moveJoint([0.1551163086351373, -1.43718690172762, 1.3254160855275712, -1.4612148276759138, -1.5647456289308708, 0.15966451933142772], timeout=5.0)
-    # arm.moveJoint([1.3679801926428028, -1.4297246128145917, 1.2446811592243003, -1.369128425872749, -1.5598725764592507, 2.1546155544206376], timeout=5.0)
-    # arm.moveJoint([1.3677681606035597, -1.4306672689958717, 1.6188301424835283, -1.7400717740118714, -1.5650770640998972, 2.156513636080088], timeout=5.0)
-    
-    # arm.gripperOpen()
-    # arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=5.0)
-
     
     # Move straight
     arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
     print arm.getEndeffectorPose()
     arm.gripperOpen()
 
-    target_object = 'soap'    
+    target_object = 'eraser'    
     world2base = get_base_frame()
 
     # compute grasping pose ----------------------------
@@ -193,19 +167,17 @@ if __name__ == '__main__':
 
     start_pose = arm.getEndeffectorPose()
     goal_pose = pre_grasp_ps
-
     # print start_pose
-    print goal_pose
+    # print goal_pose
     # arm.movePose(goal_pose, timeout=4.0)
     # sys.exit()
-    # print arm.getEndeffectorPose()
     
 
     ##############################################################################################
     dimension = 3
     start_position = [start_pose.position.x, start_pose.position.y, start_pose.position.z]
     goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
-    obstacle_names = ['book', 'eraser', 'snacks', 'soap2', 'biscuits', 'glue', 'soap']
+    # obstacle_names = ['book', 'eraser', 'snacks', 'soap2', 'biscuits', 'glue', 'soap']
     obstacles_sizes = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
     # print(msg.pose[index_of_model_states[target_object]])
     
@@ -228,14 +200,8 @@ if __name__ == '__main__':
         p7 = obstacle_position + size[0]/2.0*vector_n + size[1]/2.0*vector_s + size[2]*vector_a
         p8 = obstacle_position + size[0]/2.0*vector_n - size[1]/2.0*vector_s + size[2]*vector_a
 
-        # obstacle_list.append()
-        # print("name : {}".format(name))
-        # print((p1, p2, p3, p4, p5, p6, p7, p8))
         obstacle_list.append((p1, p2, p3, p4, p5, p6, p7, p8))
 
-    # sys.exit()
-    # print(obstacle_list)
-    # sys.exit()
     extend_size = 100
     observation_space_low = [-0.1, -0.7, -0.1]
     observation_space_high = [0.8, 0.7, 1.0]
@@ -243,7 +209,7 @@ if __name__ == '__main__':
     grid_limits = [observation_space_low, observation_space_high]
     resolution = 0.01
     
-    my_rrt = rrt.RRT(
+    my_rrt = rrt_star.RRT_STAR(
         start_position=start_position,
         goal_position=goal_position,
         obstacle_list=obstacle_list,

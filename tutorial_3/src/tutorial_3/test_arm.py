@@ -52,6 +52,20 @@ def get_base_frame():
     return misc.list2KDLframe(trans+rot)
     
 
+def get_storage_frame(target_storage):
+    """ Return the object top surface frame wrt the world frame. """
+    rospy.wait_for_service("get_object_pose")
+    pose_srv_req = rospy.ServiceProxy("get_object_pose", String_Pose)
+    
+    try:
+        obj_pose = pose_srv_req(target_storage).pose
+    except rospy.ServiceException, e:
+        print "Pose Service is not available: %s"%e
+
+    world2obj  = misc.pose2KDLframe(obj_pose)
+    return world2obj
+
+
 if __name__ == '__main__':
     rospy.init_node("test")
     rospy.sleep(1)
@@ -61,36 +75,65 @@ if __name__ == '__main__':
                                             PoseStamped,
                                             queue_size=QUEUE_SIZE,
                                             latch=True)
-    target_object = 'eraser'    
-    world2base = get_base_frame()
-
-    # compute grasping pose ----------------------------
-    world2obj = get_object_frame(target_object)
-    print world2obj
     
-    base2obj  = world2base.Inverse() * world2obj
-    #base2obj.M.DoRotX(np.pi)
-    base2obj.p[2] -= 0.03
-    grasp_ps = misc.KDLframe2Pose(base2obj)
-    # --------------------------------------------------
+    target_obj = 'glue'
+    rospy.wait_for_service("get_object_height")
+    pose_srv_req = rospy.ServiceProxy("get_object_height", String_Pose)
+    
+    try:
+        obj_pose = pose_srv_req(target_obj).pose
+        print obj_pose
+    except rospy.ServiceException, e:
+        print "Pose Service is not available: %s"%e
 
-    # compute a pre-grasping pose -----------------------
-    pre_grasp_ps = copy.deepcopy(grasp_ps)
-    pre_grasp_ps.position.z += 0.1
+    # target_object = 'glue'   
+
+
+    # world2base = get_base_frame()
+
+    # # compute grasping pose ----------------------------
+    # world2obj = get_object_frame(target_object)
+    # print world2obj
+    
+    # base2obj  = world2base.Inverse() * world2obj
+    # base2obj.M.DoRotY(-np.pi/2.)
+    # base2obj.p[2] -= 0.04
+    # grasp_ps = misc.KDLframe2Pose(base2obj)
+    # # --------------------------------------------------
+
+    # # compute a pre-grasping pose -----------------------
+    # pre_grasp_ps = copy.deepcopy(grasp_ps)
+    # pre_grasp_ps.position.z += 0.1
     # --------------------------------------------------
     
-    # Initialize the UR5 control object
-    arm = UR5ArmClient(timeout_scale=1., sim=True)
+
+    # # Initialize the UR5 control object
+    # arm = UR5ArmClient(timeout_scale=1., sim=True)
 
 
-    # A sequence of movement
-    arm.moveJoint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
-    arm.gripperOpen()   
-    arm.movePose(pre_grasp_ps, 4.)
-    arm.movePose(grasp_ps, 4.)    
-    arm.gripperClose()
-    arm.movePose(pre_grasp_ps, 4.)
-    arm.moveJoint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
+    # # A sequence of movement
+    # arm.moveJoint([-0.862410612, -1.30713835, 1.31642488, -1.69522468, -1.87213523, 0])
+    # arm.gripperOpen()   
+
+    # arm.movePose(pre_grasp_ps, 4.)
+    # arm.movePose(grasp_ps, 4.)    
+    # arm.gripperClose()
+
+    # arm.movePose(pre_grasp_ps, 4.)
+
+    # world2storage_right  = get_storage_frame('storage_right')
+    
+    # base2storage_right = world2base.Inverse() * world2storage_right
+    # base2storage_right.M.DoRotY(-np.pi/2.)
+    # storage_right_grasp_ps = misc.KDLframe2Pose(base2storage_right)
+    
+    # storage_right_pre_grasp_ps = copy.deepcopy(storage_right_grasp_ps)
+    # storage_right_grasp_ps.position.z += 0.02
+    # storage_right_pre_grasp_ps.position.z += 0.1
+
+    # arm.movePose(storage_right_pre_grasp_ps, 4.)
+    # # arm.movePose(storage_right_grasp_ps, 4.)
+    # arm.gripperOpen()
 
     # visualize the target object pose in RViZ
     ## ps = PoseStamped()

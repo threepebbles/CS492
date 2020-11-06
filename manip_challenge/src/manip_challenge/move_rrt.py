@@ -15,28 +15,9 @@ import rrt
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
-from gazebo_msgs.msg import ModelStates, LinkStates
-index_of_model_states = {'ground_plane':0, 'ur5_base':1, 'cafe_table':2, 'cafe_table_left':3, 'cafe_table_right':4, 'storage_left':5, 'storage_right':6, 'robot':7, 'book':8, 'eraser':9, 'snacks':10, 'soap2':11, 'biscuits':12, 'glue':13, 'soap':14}
+import timeit
 
 QUEUE_SIZE = 10
-
-# subscribe once
-def get_model_states(timeout=3.):
-    try:
-        msg = rospy.wait_for_message('/gazebo/model_states', ModelStates, timeout)
-        # msg = rospy.wait_for_message('/gazebo/link_states', LinkStates, timeout)
-        # print(len(msg.name))
-        # for idx, name in enumerate(msg.name):
-        #     print('\'{}\': {},'.format(name, idx), end=' ')
-        # print(msg.pose)
-        # pprint(dir(msg), indent=2)
-        # print(msg.pose[index_of_model_states[target_object]])
-        
-    except ROSException as e:
-        rospy.logwarn('get_joint_state timed out after %1.1f s' % timeout)
-
-    return msg
-
 
 def get_object_frame(target_object):
     """ Return the object top surface frame wrt the world frame. """
@@ -141,10 +122,10 @@ if __name__ == '__main__':
     
     # Move straight
     arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
-    print arm.getEndeffectorPose()
+    # print arm.getEndeffectorPose()
     arm.gripperOpen()
 
-    target_object = 'soap'    
+    target_object = 'eraser'    
     world2base = get_base_frame()
 
     # compute grasping pose ----------------------------
@@ -221,9 +202,13 @@ if __name__ == '__main__':
         max_iter=500,
         dimension=dimension)
 
-    show_animation = True
+    show_animation = False
     
+    start_time = timeit.default_timer()
     path = my_rrt.planning(animation=show_animation)
+    end_time = timeit.default_timer()
+    print("running time: {}...".format(end_time - start_time))
+
     path.reverse()
     print("len(path):", len(path))
 
@@ -255,33 +240,4 @@ if __name__ == '__main__':
         # print (pos, [cur_p.orientation.x, cur_p.orientation.y, cur_p.orientation.z, cur_p.orientation.w])
 
     arm.movePoseTrajectory(pose_traj, timeout=2.)
-    print arm.getEndeffectorPose()
-    ##################################################################################3
-    # pose = Pose(position=Point(x=0.01, y=0.4, z=0.33))
-    # arm.movePoseStraight(pose, timeout=3.0, frame='robotiq_85_base_link')
-    # print arm.getEndeffectorPose()
 
-    
-    # Move pose trajectory
-    # alpha = np.random.randint(1., 4)/20.0
-    # print(alpha)
-    # goal_pose = Pose(position=Point(x=0.01, y=0.5, z=0.3))
-    # current_pose = arm.getEndeffectorPose()
-    # poses = []
-    
-    # for i in range(1, 3):
-    #     pose = [(goal_pose.position.x-current_pose.position.x)/100.0*i,
-    #     (goal_pose.position.y-current_pose.position.y)/100.0*i,
-    #     (goal_pose.position.z-current_pose.position.z)/100.0*i]
-    #     poses.append(Pose(position=Point(x=pose[0], y=pose[1], z=pose[2])))
-    # arm.movePoseStraight(goal_pose, timeout=3.0, frame='robotiq_85_base_link')
-    # arm.movePoseTrajectory(poses, timeout=3.0, frame='robotiq_85_base_link')
-
-
-    # Move following a joint trajectory
-    # current_angle = arm.getJointAngles()
-    # arm.moveJointTraj([[please, add joints],[add joints], ..., [add goal joints]], timeout=10.0)
-    
-    
-    
-    

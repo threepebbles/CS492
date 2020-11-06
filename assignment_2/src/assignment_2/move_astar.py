@@ -129,5 +129,7 @@ if __name__ == '__main__':
     # create action client
     arm = mj.ArmClient()    
     test(arm)
+
+    print(arm.fk_request(arm.js_joint_position, attach_tool=True))
     
 

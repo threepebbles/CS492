@@ -55,6 +55,7 @@ def min_jerk(start, goal, dur, freq=100):
         # ------------------------------------------------------
     
     # print(X)    
+    print len(time)
     return np.array(time), np.array(X), np.array(Xd), np.array(Xdd), np.array(Xddd)
 
 

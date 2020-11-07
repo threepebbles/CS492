@@ -1,11 +1,3 @@
-"""
-
-Path planning Sample Code with Randomized Rapidly-Exploring Random Trees (RRT)
-
-author: AtsushiSakai(@Atsushi_twi)
-
-"""
-
 import math
 import random
 
@@ -23,22 +15,18 @@ from complex_action_client import misc, min_jerk, quaternion as qt
 from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
 from riro_srvs.srv import String_None, String_String, String_Pose, String_PoseResponse
 
-
-
 class RRT_STAR:
     """
-    Class for RRT planning
+    Class for RRT star planning
     """
 
-    class Node:
+    class Node():
         """
         RRT Node
         """
-
         def __init__(self, position):
             self.position = [position[i] for i in range(len(position))]
             self.path = []
-
             self.cost = 0.0
             self.parent = None
 
@@ -55,7 +43,8 @@ class RRT_STAR:
                  dimension=2,
                  extend_size=100,
                  connect_circle_dist = 5.0,
-                 search_until_max_iter=False):
+                 search_until_max_iter=False,
+                 animation=False):
         """
         Setting Parameter
 
@@ -79,17 +68,12 @@ class RRT_STAR:
         self.extend_size = extend_size
         self.connect_circle_dist = connect_circle_dist
         self.search_until_max_iter = search_until_max_iter
+        self.animation = animation
 
-    def planning(self, animation=True):
-        """
-        rrt path planning
 
-        animation: flag for animation on or off
-        """
-        
-        if self.dimension==3 and animation:
+        if self.dimension==3 and self.animation:
             self.fig = plt.figure()
-            self.ax = self.fig.add_subplot(111, projection='3d')
+            self.ax = self.fig.add_subplot(111, projection='3d')   
 
             self.ax.set_xlim3d(self.grid_limits[0][0]*self.extend_size, self.grid_limits[1][0]*self.extend_size)
             self.ax.set_ylim3d(self.grid_limits[0][1]*self.extend_size, self.grid_limits[1][1]*self.extend_size)
@@ -110,7 +94,13 @@ class RRT_STAR:
                 self.ax.add_collection3d(Poly3DCollection(faces, 
                     facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
 
-            
+    def planning(self):
+        """
+        rrt path planning
+
+        animation: flag for animation on or off
+        """
+        
         self.node_list = [self.start_node]
         
         for i in range(self.max_iter):
@@ -122,7 +112,8 @@ class RRT_STAR:
             d, _ = self.calc_distance_and_orientation(new_node, nearest_node)
             new_node.cost = nearest_node.cost + d
 
-            if self.check_valid_position(self.arm, new_node, self.dimension) and self.check_collision(new_node, self.obstacle_list, self.dimension):
+            if self.check_valid_position(new_node, arm=self.arm, dimension=self.dimension) \
+                and self.check_collision(new_node, self.obstacle_list, dimension=self.dimension):
                 near_inds = self.find_near_nodes(new_node)
 
                 node_with_updated_parent = self.choose_parent(new_node, near_inds)
@@ -133,7 +124,7 @@ class RRT_STAR:
                 else:
                     self.node_list.append(new_node)
 
-            if animation:
+            if self.animation:
                 self.draw_graph(rnd_node)
 
             if ((not self.search_until_max_iter) and new_node): # if reach goal
@@ -152,14 +143,14 @@ class RRT_STAR:
         new_node = self.Node(from_node.position)
         d, ds = self.calc_distance_and_orientation(new_node, to_node)
         ds = [di*self.path_resolution for di in ds]
-
+        print("from {} to {} : {}".format(from_node.position, to_node.position, d))
         new_node.path = [new_node.position]
 
         if extend_length > d:
             extend_length = d
 
         n_expand = int(math.floor(extend_length / self.path_resolution))
-
+        print("extend_length / self.path_resolution = n_expand: ",extend_length, self.path_resolution, n_expand)
         for _ in range(n_expand):
             new_node.position = list(map(add, new_node.position, ds))
             new_node.path.append(new_node.position)
@@ -221,7 +212,7 @@ class RRT_STAR:
         for i in near_inds:
             near_node = self.node_list[i]
             t_node = self.steer(near_node, new_node)
-            if t_node and self.check_collision(t_node, self.obstacle_list, self.dimension):
+            if t_node and self.check_collision(t_node, self.obstacle_list, dimension=self.dimension):
                 costs.append(self.calc_new_cost(near_node, new_node))
             else:
                 costs.append(float("inf"))  # the cost of collision node
@@ -249,7 +240,8 @@ class RRT_STAR:
         safe_goal_inds = []
         for goal_ind in goal_inds:
             t_node = self.steer(self.node_list[goal_ind], self.end_node)
-            if self.check_valid_position(self.arm, t_node, self.dimension) and self.check_collision(t_node, self.obstacle_list, self.dimension):
+            if self.check_valid_position(t_node, arm=self.arm, dimension=self.dimension) \
+                and self.check_collision(t_node, self.obstacle_list, dimension=self.dimension):
                 safe_goal_inds.append(goal_ind)
 
         if not safe_goal_inds:
@@ -313,7 +305,7 @@ class RRT_STAR:
                 continue
             edge_node.cost = self.calc_new_cost(new_node, near_node)
 
-            no_collision = self.check_collision(edge_node, self.obstacle_list, self.dimension)
+            no_collision = self.check_collision(edge_node, self.obstacle_list, dimension=self.dimension)
             improved_cost = near_node.cost > edge_node.cost
 
             if no_collision and improved_cost:
@@ -328,7 +320,6 @@ class RRT_STAR:
         return from_node.cost + d
 
     def propagate_cost_to_leaves(self, parent_node):
-
         for node in self.node_list:
             if node.parent == parent_node:
                 node.cost = self.calc_new_cost(parent_node, node)
@@ -341,6 +332,7 @@ class RRT_STAR:
         return np.array(new_p)
 
     def draw_graph(self, rnd=None):
+        
         if(self.dimension==2):
             plt.clf()
             # for stopping simulation with the esc key.
@@ -365,20 +357,17 @@ class RRT_STAR:
 
         elif(self.dimension==3):
             # plt.clf()
-            # # for stopping simulation with the esc key.
-            # plt.gcf().canvas.mpl_connect(
-            #     'key_release_event',
-            #     lambda event: [exit(0) if event.key == 'escape' else None])
 
             if rnd is not None:
-                plt.plot([rnd.position[0]*self.extend_size], [rnd.position[1]*self.extend_size], [rnd.position[2]*self.extend_size], "^k")
+                plt.plot([rnd.position[0]*self.extend_size], 
+                    [rnd.position[1]*self.extend_size], 
+                    [rnd.position[2]*self.extend_size], "^k")
 
             for node in self.node_list:
                 if node.parent:
                     plt.plot([row[0]*self.extend_size for row in node.path], 
                         [row[1]*self.extend_size for row in node.path], 
                         [row[2]*self.extend_size for row in node.path], "-g")
-
             
             plt.plot([self.start_node.position[0]*self.extend_size, self.end_node.position[0]*self.extend_size], 
                 [self.start_node.position[1]*self.extend_size, self.end_node.position[1]*self.extend_size],
@@ -405,14 +394,14 @@ class RRT_STAR:
         return minind
 
     @staticmethod
-    def check_collision(node, obstacle_list, dimension):
-
+    def check_collision(node, obstacle_list, dimension=2):
         if node is None:
             return False
 
         if dimension==2:
             path_x = [row[0] for row in node.path]
             path_y = [row[1] for row in node.path]
+
             # circle obstacles
             for (ox, oy, size) in obstacle_list:
                 dx_list = [ox - x for x in path_x]
@@ -424,7 +413,6 @@ class RRT_STAR:
             return True  # safe
 
         elif dimension==3:
-            # check collision with the obstacles
             path_x = [row[0] for row in node.path]
             path_y = [row[1] for row in node.path]
             path_z = [row[2] for row in node.path]
@@ -447,14 +435,15 @@ class RRT_STAR:
             return True
     
     @staticmethod
-    def check_valid_position(arm, node, dimension):
+    def check_valid_position(node, arm=None, dimension=2):
+        # whether the position of the node can be reached by the robot arm or not
         if dimension==2:
             return True
+
         elif dimension==3:
             if arm==None:
                 return True
 
-            # if there exists a valid joint solution
             pose = Pose(position=Point(x=node.position[0], y=node.position[1], z=node.position[2]))
             if arm.ik_request(pose)==False:
                 print("False")
@@ -466,8 +455,8 @@ class RRT_STAR:
         v = np.array(to_node.position)
 
         d = np.linalg.norm(u-v)
-        if d==0: d += 1e7
-        ds = (v-u)/d
+        if d==0: ds = [0 for _ in range(len(u))]
+        else: ds = (v-u)/d
         
         return d, ds
 
@@ -481,7 +470,7 @@ def main():
         ############## 2D ######################
         # ====Search Path with RRT====
         obstacle_list = [(5, 5, 1), (3, 6, 2), (3, 8, 2), (3, 10, 2), (7, 5, 2),
-                        (9, 5, 2), (8, 10, 1)]  # [x, y, radius]
+                        (9, 5, 2)]  # [x, y, radius]
         # Set Initial parameters
         start_position = [0., 0.]
         goal_position = [6.0, 10.0]
@@ -502,21 +491,22 @@ def main():
         ############## 3D ######################
 
 
-    rrt = RRT(
+    my_rrt = RRT_STAR(
         start_position=start_position,
         goal_position=goal_position,
         obstacle_list=obstacle_list,
         grid_limits=grid_limits,
-        expand_dis=3.0, # step size
+        expand_dis=1.0, # step size
         path_resolution=0.1, # grid size
         goal_sample_rate=5,
         max_iter=500,
         dimension=dimension,
-        extend_size=100)
+        extend_size=100,
+        animation=True)
 
     show_animation = True
 
-    path = rrt.planning(animation=show_animation)
+    path = my_rrt.planning()
     print("len(path):", len(path))
 
     if path is None:
@@ -526,13 +516,13 @@ def main():
 
         # Draw final path
         if show_animation:
-            rrt.draw_graph()
-            if(rrt.dimension==2):
+            my_rrt.draw_graph()
+            if(my_rrt.dimension==2):
                 plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac
                 plt.show()
-            elif(rrt.dimension==3):
+            elif(my_rrt.dimension==3):
                 plt.plot([x for (x, y, z) in path], [y for (x, y, z) in path], [z for (x, y, z) in path], '-r')
                 plt.grid(True)
                 plt.pause(0.01)  # Need for Mac

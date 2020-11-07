@@ -190,22 +190,24 @@ if __name__ == '__main__':
     grid_limits = [observation_space_low, observation_space_high]
     resolution = 0.01
     
+
+    show_animation = False
+
     my_rrt = rrt_star.RRT_STAR(
         start_position=start_position,
         goal_position=goal_position,
         obstacle_list=obstacle_list,
         grid_limits=grid_limits,
         arm = arm,
-        expand_dis=0.03, # step size
+        expand_dis=0.01, # step size
         path_resolution=resolution, # grid size
-        goal_sample_rate=5,
+        goal_sample_rate=30,
         max_iter=500,
-        dimension=dimension)
-
-    show_animation = False
+        dimension=dimension,
+        animation=show_animation)
     
     start_time = timeit.default_timer()
-    path = my_rrt.planning(animation=show_animation)
+    path = my_rrt.planning()
     end_time = timeit.default_timer()
     print("running time: {}...".format(end_time - start_time))
 
@@ -237,7 +239,4 @@ if __name__ == '__main__':
         # ------------------------------------------------------
         pose_traj.append(cur_p)
 
-    arm.movePoseectory(pose_traj, timeout=2.)
-    print arm.getEndeffectorPose()
-    
-    
+    arm.movePoseTrajectory(pose_traj, timeout=2.)

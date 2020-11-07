@@ -1,11 +1,3 @@
-"""
-
-Path planning Sample Code with Randomized Rapidly-Exploring Random Trees (RRT)
-
-author: AtsushiSakai(@Atsushi_twi)
-
-"""
-
 import math
 import random
 
@@ -53,14 +45,15 @@ class RRT:
                  goal_sample_rate=5,
                  max_iter=500,
                  dimension=2,
-                 extend_size=100):
+                 extend_size=100,
+                 animation=False):
         """
         Setting Parameter
 
-        start:Start Position [x,y]
-        goal:Goal Position [x,y]
-        obstacle_list:obstacle Positions [[x,y,size],...]
-        randArea:Random Sampling Area [min,max]
+        start_position:Start Position [x,y,z,...]
+        goal_position:Goal Position [x,y,z,...]
+        obstacle_list: the list of geometric informations of the obstacles
+        grid_limits: Random Sampling Area [minx, miny, minz, ...], [maxx, maxy, maxz, ...]
 
         """
         self.arm = arm
@@ -75,15 +68,9 @@ class RRT:
         self.node_list = []
         self.dimension = dimension
         self.extend_size = extend_size
+        self.animation = animation
 
-    def planning(self, animation=True):
-        """
-        rrt path planning
-
-        animation: flag for animation on or off
-        """
-        
-        if self.dimension==3 and animation:
+        if self.dimension==3 and self.animation:
             self.fig = plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
 
@@ -92,7 +79,7 @@ class RRT:
             self.ax.set_zlim3d(self.grid_limits[0][2]*self.extend_size, self.grid_limits[1][2]*self.extend_size)
 
             for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
-                # plot cuboid
+                # plot cuboid obstacles
                 vtcs = np.array([self.point_resolution(p1), self.point_resolution(p2), 
                     self.point_resolution(p3), self.point_resolution(p4), 
                     self.point_resolution(p5), self.point_resolution(p6), 
@@ -106,6 +93,12 @@ class RRT:
                 self.ax.add_collection3d(Poly3DCollection(faces, 
                     facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
 
+    def planning(self):
+        """
+        rrt path planning
+
+        animation: flag for animation on or off
+        """
             
         self.node_list = [self.start_node]
         
@@ -116,20 +109,22 @@ class RRT:
             
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if self.check_valid_position(self.arm, new_node, self.dimension) and self.check_collision(new_node, self.obstacle_list, self.dimension):
+            if self.check_valid_position(new_node, arm=self.arm, dimension=self.dimension) \
+                and self.check_collision(new_node, self.obstacle_list, dimension=self.dimension):
                 self.node_list.append(new_node)
 
-            if animation:
+            if self.animation:
                 self.draw_graph(rnd_node)
 
             if self.calc_dist_to_goal(self.node_list[-1]) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end_node,
                                         self.expand_dis)
                 
-                if self.check_valid_position(self.arm, new_node, self.dimension) and self.check_collision(final_node, self.obstacle_list, self.dimension):
+                if self.check_valid_position(new_node, arm=self.arm, dimension=self.dimension) \
+                    and self.check_collision(final_node, self.obstacle_list, dimension=self.dimension):
                     return self.generate_final_course(len(self.node_list) - 1)
 
-            if animation:
+            if self.animation:
                 self.draw_graph(rnd_node)
 
         return None  # cannot find path
@@ -185,6 +180,9 @@ class RRT:
         return rnd
 
     def point_resolution(self, p):
+        """
+        point resolution with respect to extend_size
+        """
         new_p = []
         for i in range(self.dimension):
             new_p.append( (p[i] - self.grid_limits[0][i])*self.extend_size + self.grid_limits[0][i]*self.extend_size )
@@ -214,12 +212,6 @@ class RRT:
             plt.pause(0.01)
 
         elif(self.dimension==3):
-            # plt.clf()
-            # # for stopping simulation with the esc key.
-            # plt.gcf().canvas.mpl_connect(
-            #     'key_release_event',
-            #     lambda event: [exit(0) if event.key == 'escape' else None])
-
             if rnd is not None:
                 plt.plot([rnd.position[0]*self.extend_size], [rnd.position[1]*self.extend_size], [rnd.position[2]*self.extend_size], "^k")
 
@@ -255,7 +247,7 @@ class RRT:
         return minind
 
     @staticmethod
-    def check_collision(node, obstacle_list, dimension):
+    def check_collision(node, obstacle_list, dimension=2):
 
         if node is None:
             return False
@@ -297,9 +289,12 @@ class RRT:
             return True
     
     @staticmethod
-    def check_valid_position(arm, node, dimension):
+    def check_valid_position(node, arm=None, dimension=2):
+        # whether the position of the node can be reached by the robot arm or not
+
         if dimension==2:
             return True
+
         elif dimension==3:
             if arm==None:
                 return True
@@ -310,16 +305,14 @@ class RRT:
                 print("False")
             return arm.ik_request(pose)
 
-        
-
     @staticmethod
     def calc_distance_and_orientation(from_node, to_node):
         u = np.array(from_node.position)
         v = np.array(to_node.position)
 
         d = np.linalg.norm(u-v)
-        if d==0: d += 1e7
-        ds = (v-u)/d
+        if d==0: ds = [0 for _ in range(len(u))]
+        else: ds = (v-u)/d
         
         return d, ds
 
@@ -333,7 +326,7 @@ def main():
         ############## 2D ######################
         # ====Search Path with RRT====
         obstacle_list = [(5, 5, 1), (3, 6, 2), (3, 8, 2), (3, 10, 2), (7, 5, 2),
-                        (9, 5, 2), (8, 10, 1)]  # [x, y, radius]
+                        (9, 5, 2)]  # [x, y, radius]
         # Set Initial parameters
         start_position = [0., 0.]
         goal_position = [6.0, 10.0]
@@ -354,21 +347,22 @@ def main():
         ############## 3D ######################
 
 
+    show_animation = True
+
     rrt = RRT(
         start_position=start_position,
         goal_position=goal_position,
         obstacle_list=obstacle_list,
         grid_limits=grid_limits,
-        expand_dis=3.0, # step size
+        expand_dis=1.0, # step size
         path_resolution=0.1, # grid size
         goal_sample_rate=5,
         max_iter=500,
         dimension=dimension,
-        extend_size=100)
+        extend_size=100,
+        animation=show_animation)
 
-    show_animation = True
-
-    path = rrt.planning(animation=show_animation)
+    path = rrt.planning()
     print("len(path):", len(path))
 
     if path is None:

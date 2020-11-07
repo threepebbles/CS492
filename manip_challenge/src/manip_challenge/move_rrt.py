@@ -188,7 +188,9 @@ if __name__ == '__main__':
     observation_space_high = [0.8, 0.7, 1.0]
 
     grid_limits = [observation_space_low, observation_space_high]
-    resolution = 0.01
+    resolution = 0.03
+
+    show_animation = True
     
     my_rrt = rrt.RRT(
         start_position=start_position,
@@ -198,14 +200,13 @@ if __name__ == '__main__':
         arm = arm,
         expand_dis=0.03, # step size
         path_resolution=resolution, # grid size
-        goal_sample_rate=5,
+        goal_sample_rate=30,
         max_iter=500,
-        dimension=dimension)
+        dimension=dimension,
+        animation=show_animation)
 
-    show_animation = False
-    
     start_time = timeit.default_timer()
-    path = my_rrt.planning(animation=show_animation)
+    path = my_rrt.planning()
     end_time = timeit.default_timer()
     print("running time: {}...".format(end_time - start_time))
 
@@ -240,4 +241,3 @@ if __name__ == '__main__':
         # print (pos, [cur_p.orientation.x, cur_p.orientation.y, cur_p.orientation.z, cur_p.orientation.w])
 
     arm.movePoseTrajectory(pose_traj, timeout=2.)
-

@@ -139,18 +139,15 @@ class RRT_STAR:
         return None  # cannot find path
 
     def steer(self, from_node, to_node, extend_length=float("inf")):
-
         new_node = self.Node(from_node.position)
         d, ds = self.calc_distance_and_orientation(new_node, to_node)
         ds = [di*self.path_resolution for di in ds]
-        print("from {} to {} : {}".format(from_node.position, to_node.position, d))
         new_node.path = [new_node.position]
 
         if extend_length > d:
             extend_length = d
 
         n_expand = int(math.floor(extend_length / self.path_resolution))
-        print("extend_length / self.path_resolution = n_expand: ",extend_length, self.path_resolution, n_expand)
         for _ in range(n_expand):
             new_node.position = list(map(add, new_node.position, ds))
             new_node.path.append(new_node.position)
@@ -445,8 +442,6 @@ class RRT_STAR:
                 return True
 
             pose = Pose(position=Point(x=node.position[0], y=node.position[1], z=node.position[2]))
-            if arm.ik_request(pose)==False:
-                print("False")
             return arm.ik_request(pose)
 
     @staticmethod

@@ -301,8 +301,6 @@ class RRT:
 
             # if there exists a valid joint solution
             pose = Pose(position=Point(x=node.position[0], y=node.position[1], z=node.position[2]))
-            if arm.ik_request(pose)==False:
-                print("False")
             return arm.ik_request(pose)
 
     @staticmethod

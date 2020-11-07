@@ -200,6 +200,46 @@ class KDLKinematics(object):
             print "FK KDL failure on end transformation."
         return base_trans**-1 * end_trans
 
+
+    ##
+    # Forward kinematics on the given joint angles, returning the location of the
+    # end_link in the base_link's frame.
+    # @param q List of joint angles for the full kinematic chain.
+    # @param end_link Name of the link the pose should be obtained for.
+    # @param base_link Name of the root link frame the end_link should be found in.
+    # @return 4x4 numpy.mat homogeneous transformation
+    def forward_recursive(self, q, end_link=None, base_link=None):
+        link_names = self.get_link_names()
+        if end_link is None:
+            end_link = self.chain.getNrOfSegments()
+        else:
+            end_link = end_link.split("/")[-1]
+            if end_link in link_names:
+                end_link = link_names.index(end_link)
+            else:
+                print "Target segment %s not in KDL chain" % end_link
+                return None
+        if base_link is None:
+            base_link = 0
+        else:
+            base_link = base_link.split("/")[-1]
+            if base_link in link_names:
+                base_link = link_names.index(base_link)
+            else:
+                print "Base segment %s not in KDL chain" % base_link
+                return None
+        base_trans = self._do_kdl_fk(q, base_link)
+        if base_trans is None:
+            print "FK KDL failure on base transformation."
+        end_trans_list = self._do_kdl_fk_list(q, end_link)
+        trans_list = []
+        for end_trans in end_trans_list:
+            if end_trans is None:
+                print "FK KDL failure on end transformation."
+            trans_list.append(base_trans**-1 * end_trans)
+        return trans_list
+
+    
     def _do_kdl_fk(self, q, link_number):
         endeffec_frame = kdl.Frame()
         kinematics_status = self._fk_kdl.JntToCart(joint_list_to_kdl(q),
@@ -215,6 +255,45 @@ class KDLKinematics(object):
         else:
             return None
 
+        
+    ##
+    # Forward kinematics on the given joint angles, returning a sequence of intermediate frames
+    # from the base_link to the specified link.
+    # @param q List of joint angles for the full kinematic chain.
+    # @param link number should be obtained for.
+    # @return a list of 4x4 numpy.mat homogeneous transformations
+    def _do_kdl_fk_list(self, q, link_number):
+        endeffec_frames = [kdl.Frame()]*link_number
+        ## from IPython import embed; embed(); sys.exit()
+
+        if len(q) < link_number:
+            q = np.concatenate([q, np.zeros(link_number-len(q)) ])
+        
+        j = 0
+        if self.chain.getSegment(0).getJoint().getType() != None:
+            endeffec_frames[0] = self.chain.getSegment(0).pose(q[j])
+            j += 1
+        else:
+            endeffec_frames[0] = self.chain.getSegment(0).pose(0)
+
+        p_out = []
+        for i in range(1,link_number):
+            if self.chain.getSegment(i).getJoint().getType() != None:
+                endeffec_frames[i] = endeffec_frames[i-1]*self.chain.getSegment(i).pose(q[j])
+                j+=1
+            else:
+                endeffec_frames[i] = endeffec_frames[i-1]*self.chain.getSegment(i).pose(0)
+                
+            p = endeffec_frames[i].p
+            M = endeffec_frames[i].M
+            p_out.append( np.mat([[M[0,0], M[0,1], M[0,2], p.x()],
+                                      [M[1,0], M[1,1], M[1,2], p.y()],
+                                      [M[2,0], M[2,1], M[2,2], p.z()],
+                                      [     0,      0,      0,     1]]) )
+
+        return p_out
+    
+        
     ##
     # Inverse kinematics for a given pose, returning the joint angles required
     # to obtain the target pose.

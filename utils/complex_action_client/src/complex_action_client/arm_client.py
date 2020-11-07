@@ -102,6 +102,8 @@ class ArmClient(object):
         self._fs_lock = threading.Lock()
         self._fs_force = None
         self._joint_names = None
+        self._joint_limit_upper = None
+        self._joint_limit_lower = None
 
         # Goal variables
         self._goal = FollowJointTrajectoryGoal()

@@ -115,6 +115,13 @@ def list_rpy2list_quat(s):
     return [s[0], s[1], s[2], quat[0], quat[1], quat[2], quat[3]]
 
 
+def KDLframe2Matrix(frame):
+    Rx = frame.M.UnitX(); Ry = frame.M.UnitY(); Rz = frame.M.UnitZ()
+    return np.array([[Rx[0], Ry[0], Rz[0], frame.p[0]],
+                         [Rx[1], Ry[1], Rz[1], frame.p[1]],
+                         [Rx[2], Ry[2], Rz[2], frame.p[2]],
+                         [0,0,0,1]]) 
+
 # -----------------------------------------------------------------------------------------
 def dist_positions(position1, position2):
 

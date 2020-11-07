@@ -200,6 +200,40 @@ class KDLKinematics(object):
             print "FK KDL failure on end transformation."
         return base_trans**-1 * end_trans
 
+
+    def forward_recursive(self, q, end_link=None, base_link=None):
+        link_names = self.get_link_names()
+        if end_link is None:
+            end_link = self.chain.getNrOfSegments()
+        else:
+            end_link = end_link.split("/")[-1]
+            if end_link in link_names:
+                end_link = link_names.index(end_link)
+            else:
+                print "Target segment %s not in KDL chain" % end_link
+                return None
+        if base_link is None:
+            base_link = 0
+        else:
+            base_link = base_link.split("/")[-1]
+            if base_link in link_names:
+                base_link = link_names.index(base_link)
+            else:
+                print "Base segment %s not in KDL chain" % base_link
+                return None
+        base_trans = self._do_kdl_fk(q, base_link)
+        if base_trans is None:
+            print "FK KDL failure on base transformation."
+            
+        end_trans_list = self._do_kdl_fks(q, end_link)
+        trans_list     = []
+        for end_trans in end_trans_list:
+            if end_trans is None:
+                print "FK KDL failure on end transformation."
+            trans_list.append( base_trans**-1 * end_trans )
+        return trans_list
+    
+    
     def _do_kdl_fk(self, q, link_number):
         endeffec_frame = kdl.Frame()
         kinematics_status = self._fk_kdl.JntToCart(joint_list_to_kdl(q),
@@ -215,6 +249,25 @@ class KDLKinematics(object):
         else:
             return None
 
+    def _do_kdl_fks(self, q, link_number):
+        endeffec_frames = [kdl.Frame()]*link_number
+        kinematics_status = self._fk_kdl.JntToCart(joint_list_to_kdl(q),
+                                                   endeffec_frames,
+                                                   link_number)
+        if kinematics_status >= 0:
+            mat_list = []
+            for endeffec_frame in endeffec_frames:
+                p = endeffec_frame.p
+                M = endeffec_frame.M
+                mat_list.append(np.mat([[M[0,0], M[0,1], M[0,2], p.x()],
+                                            [M[1,0], M[1,1], M[1,2], p.y()],
+                                            [M[2,0], M[2,1], M[2,2], p.z()],
+                                            [     0,      0,      0,     1]]))
+            return mat_list
+        else:
+            return None
+
+        
     ##
     # Inverse kinematics for a given pose, returning the joint angles required
     # to obtain the target pose.

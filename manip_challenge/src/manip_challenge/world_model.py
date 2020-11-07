@@ -5,11 +5,13 @@ import math
 import numpy as np
 from copy import copy, deepcopy
 import threading, time
+import json
 
 import rospy
 import PyKDL
 from riro_srvs.srv import String_Pose, String_PoseResponse, String_String, String_StringResponse, None_String, None_StringResponse
 from gazebo_msgs.msg import ModelStates
+from std_msgs.msg import String
 
 import misc
 
@@ -20,7 +22,10 @@ class GazeboParser():
 
         self._world_lock = threading.RLock() 
         self.wm = {}
-       
+
+        self.world_pub = rospy.Publisher("world_model", String,
+                                             queue_size=10)
+        
         # subscriber
         rospy.Subscriber("/gazebo/model_states", ModelStates, self.gz_model_callback)
         
@@ -143,10 +148,11 @@ class GazeboParser():
         return NotImplemented
         
         
-    ## def run(self):
-    ##     rate = rospy.Rate(10)
-    ##     while not rospy.is_shutdown():
-    ##         rate.sleep()
+    def run(self):
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():            
+            self.world_pub.publish(json.dumps(self.wm))            
+            rate.sleep()
         
 
 
@@ -164,5 +170,7 @@ if __name__ == '__main__':
 
     rospy.init_node("gazebo_parser")
     gp = GazeboParser()
-    rospy.spin()
+
+    gp.run()
+    ## rospy.spin()
     

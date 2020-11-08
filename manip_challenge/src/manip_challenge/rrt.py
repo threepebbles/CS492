@@ -72,26 +72,6 @@ class RRT:
 
         if self.dimension==3 and self.animation:
             self.fig = plt.figure()
-            self.ax = self.fig.add_subplot(111, projection='3d')
-
-            self.ax.set_xlim3d(self.grid_limits[0][0]*self.extend_size, self.grid_limits[1][0]*self.extend_size)
-            self.ax.set_ylim3d(self.grid_limits[0][1]*self.extend_size, self.grid_limits[1][1]*self.extend_size)
-            self.ax.set_zlim3d(self.grid_limits[0][2]*self.extend_size, self.grid_limits[1][2]*self.extend_size)
-
-            for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
-                # plot cuboid obstacles
-                vtcs = np.array([self.point_resolution(p1), self.point_resolution(p2), 
-                    self.point_resolution(p3), self.point_resolution(p4), 
-                    self.point_resolution(p5), self.point_resolution(p6), 
-                    self.point_resolution(p7), self.point_resolution(p8)])
-                
-                self.ax.scatter3D(vtcs[:, 0], vtcs[:, 1], vtcs[:, 2])
-                faces = [[vtcs[0], vtcs[1], vtcs[2], vtcs[3]], [vtcs[0], vtcs[4], vtcs[7], vtcs[3]], 
-                        [vtcs[4], vtcs[5], vtcs[6], vtcs[7]], [vtcs[7], vtcs[6], vtcs[2], vtcs[3]], 
-                        [vtcs[6], vtcs[5], vtcs[1], vtcs[2]], [vtcs[4], vtcs[5], vtcs[1], vtcs[0]]]
-                
-                self.ax.add_collection3d(Poly3DCollection(faces, 
-                    facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
 
     def planning(self):
         """
@@ -212,6 +192,27 @@ class RRT:
             plt.pause(0.01)
 
         elif(self.dimension==3):
+            self.ax = self.fig.add_subplot(111, projection='3d')
+
+            self.ax.set_xlim3d(self.grid_limits[0][0]*self.extend_size, self.grid_limits[1][0]*self.extend_size)
+            self.ax.set_ylim3d(self.grid_limits[0][1]*self.extend_size, self.grid_limits[1][1]*self.extend_size)
+            self.ax.set_zlim3d(self.grid_limits[0][2]*self.extend_size, self.grid_limits[1][2]*self.extend_size)
+
+            for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
+                # plot cuboid obstacles
+                vtcs = np.array([self.point_resolution(p1), self.point_resolution(p2), 
+                    self.point_resolution(p3), self.point_resolution(p4), 
+                    self.point_resolution(p5), self.point_resolution(p6), 
+                    self.point_resolution(p7), self.point_resolution(p8)])
+                
+                self.ax.scatter3D(vtcs[:, 0], vtcs[:, 1], vtcs[:, 2])
+                faces = [[vtcs[0], vtcs[1], vtcs[2], vtcs[3]], [vtcs[0], vtcs[4], vtcs[7], vtcs[3]], 
+                        [vtcs[4], vtcs[5], vtcs[6], vtcs[7]], [vtcs[7], vtcs[6], vtcs[2], vtcs[3]], 
+                        [vtcs[6], vtcs[5], vtcs[1], vtcs[2]], [vtcs[4], vtcs[5], vtcs[1], vtcs[0]]]
+                
+                self.ax.add_collection3d(Poly3DCollection(faces, 
+                    facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
+                
             if rnd is not None:
                 plt.plot([rnd.position[0]*self.extend_size], [rnd.position[1]*self.extend_size], [rnd.position[2]*self.extend_size], "^k")
 

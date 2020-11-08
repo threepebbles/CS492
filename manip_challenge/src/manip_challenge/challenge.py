@@ -11,14 +11,19 @@ from riro_srvs.srv import String_None, String_String, String_Pose, String_PoseRe
 
 import tf
 
-import rrt_star
+import rrt
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 import timeit
 
-QUEUE_SIZE = 10
+from std_msgs.msg import String
+import json
 
+QUEUE_SIZE = 10
+obstacle_names = ['book', 'eraser', 'snacks', 'soap2', 'biscuits', 'glue', 'soap']
+obstacles_sizes = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
+    
 def get_object_frame(target_object):
     """ Return the object top surface frame wrt the world frame. """
     rospy.wait_for_service("get_object_pose")
@@ -73,61 +78,9 @@ def get_base_frame():
             continue
         break
     return misc.list2KDLframe(trans+rot)
-    
-
-def get_storage_frame(target_storage):
-    """ Return the object top surface frame wrt the world frame. """
-    rospy.wait_for_service("get_object_pose")
-    pose_srv_req = rospy.ServiceProxy("get_object_pose", String_Pose)
-    
-    try:
-        obj_pose = pose_srv_req(target_storage).pose
-    except rospy.ServiceException, e:
-        print "Pose Service is not available: %s"%e
-
-    world2obj  = misc.pose2KDLframe(obj_pose)
-    return world2obj
 
 
-# def get_object_pose(target_object):
-#     rospy.wait_for_service('/get_object_pose')
-#     pose_srv_req = rospy.ServiceProxy('/get_object_pose', String_Pose)
-    
-#     # You can send a query to obtain the pose of a selected object
-#     obj_pose = pose_srv_req(target_object).pose
-#     return obj_pose
-
-
-if __name__ == '__main__':
-
-    rospy.init_node('arm_client')
-    rospy.sleep(1)
-    arm = UR5ArmClient(timeout_scale=1., sim=True)
-
-    # ---------------------------------------------------------------------
-    # Check the robot status
-    # --------------------------------------------------------------------
-    # Get the current joint angle
-    # print arm.getJointAngles()
-    # Get the current endeffector pose
-    # print arm.getEndeffectorPose()
-
-    # ---------------------------------------------------------------------
-    # Check gripper functions
-    # ---------------------------------------------------------------------
-    #arm.gripperOpen()
-    #arm.gripperClose()
-    #arm.getGripperState()
-
-
-    # Move straight
-    # arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
-    # print arm.getEndeffectorPose()
-    arm.gripperOpen()
-
-    target_object = 'book'    
-    world2base = get_base_frame()
-
+def get_target_object_pose(target_object, world2base):
     # compute grasping pose ----------------------------
     world2obj = get_object_top_frame(target_object)
     base2obj  = world2base.Inverse() * world2obj
@@ -139,28 +92,17 @@ if __name__ == '__main__':
     # base2obj.M.DoRotY(-np.pi/2.)
     base2obj.p[2] -= 0.04
     grasp_ps = misc.KDLframe2Pose(base2obj)
-    # --------------------------------------------------
 
     # compute a pre-grasping pose -----------------------
     pre_grasp_ps = copy.deepcopy(grasp_ps)
     pre_grasp_ps.position.z += 0.1
-    # --------------------------------------------------
+    return grasp_ps, pre_grasp_ps
 
-    start_pose = arm.getEndeffectorPose()
-    goal_pose = pre_grasp_ps
-    # print start_pose
-    # print goal_pose
-    # arm.movePose(goal_pose, timeout=4.0)
-    # sys.exit()
-    
 
-    ##############################################################################################
+def get_pose_trj(start_pose, goal_pose, world2base, show_animation=False):
     dimension = 3
     start_position = [start_pose.position.x, start_pose.position.y, start_pose.position.z]
     goal_position = [goal_pose.position.x, goal_pose.position.y, goal_pose.position.z]
-    # obstacle_names = ['book', 'eraser', 'snacks', 'soap2', 'biscuits', 'glue', 'soap']
-    obstacles_sizes = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
-    # print(msg.pose[index_of_model_states[target_object]])
     
     obstacle_list = []
     for name, size in obstacles_sizes.items():
@@ -183,37 +125,29 @@ if __name__ == '__main__':
 
         obstacle_list.append((p1, p2, p3, p4, p5, p6, p7, p8))
 
-    extend_size = 100
     observation_space_low = [-0.1, -0.7, -0.1]
     observation_space_high = [0.8, 0.7, 1.0]
-
     grid_limits = [observation_space_low, observation_space_high]
     resolution = 0.01
     
-
-    show_animation = True
-
-    my_rrt = rrt_star.RRT_STAR(
+    my_rrt = rrt.RRT(
         start_position=start_position,
         goal_position=goal_position,
         obstacle_list=obstacle_list,
         grid_limits=grid_limits,
         arm = arm,
-        expand_dis=0.01, # step size
+        expand_dis=0.02, # step size
         path_resolution=resolution, # grid size
-        goal_sample_rate=30,
+        goal_sample_rate=80, # 5/100
         max_iter=500,
-        dimension=dimension,
-        animation=show_animation)
+        dimension=dimension)
     
     start_time = timeit.default_timer()
-    path = my_rrt.planning()
+    path = my_rrt.planning(animation=show_animation)
     end_time = timeit.default_timer()
     print("running time: {}...".format(end_time - start_time))
 
-    path.reverse()
-    print("len(path):", len(path))
-
+    print("len(path): ", len(path))
     if path is None:
         print("Cannot find path")
     else:
@@ -226,6 +160,7 @@ if __name__ == '__main__':
             plt.pause(0.01)  # Need for Mac
             plt.show()
 
+    path.reverse()
     traj_len = len(path)
     pose_traj = []
     for i, pos in enumerate(path):
@@ -239,4 +174,90 @@ if __name__ == '__main__':
         # ------------------------------------------------------
         pose_traj.append(cur_p)
 
-    arm.movePoseTrajectory(pose_traj, timeout=2.)
+    return pose_traj
+
+
+if __name__ == '__main__':
+
+    rospy.init_node('arm_client')
+    rospy.sleep(1)
+    arm = UR5ArmClient(timeout_scale=1., sim=True)
+
+    # ---------------------------------------------------------------------
+    # Check the robot status
+    # --------------------------------------------------------------------
+    # Get the current joint angle
+    # print arm.getJointAngles()
+    # Get the current endeffector pose
+    # print arm.getEndeffectorPose()
+
+    # ---------------------------------------------------------------------
+    # Check gripper functions
+    # ---------------------------------------------------------------------
+    #arm.gripperOpen()
+    #arm.gripperClose()
+    #arm.getGripperState()
+    
+    
+    
+    try:
+        msg = rospy.wait_for_message("/task_commands", String)
+        d = json.loads(msg.data)
+        # print d['storage_left']
+    except rospy.ServiceException, e:
+        print "Pose Service is not available: %s"%e
+    # sys.exit()
+
+    world2base = get_base_frame()
+    world2sl = get_object_frame("storage_left")
+    base2sl  = world2base.Inverse() * world2sl
+    sl_ps = misc.KDLframe2Pose(base2sl)
+    sl_ps.position.z += 0.2
+    
+    world2sr = get_object_frame("storage_right")
+    base2sr  = world2base.Inverse() * world2sr
+    sr_ps = misc.KDLframe2Pose(base2sr)
+    sr_ps.position.z += 0.2
+
+    # Move straight
+    arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
+    arm.moveJoint([1.1, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
+    # print arm.getEndeffectorPose()
+    arm.gripperOpen()
+
+    # print(d['storage_left'])
+    # for target_object in d['storage_left']:
+
+    #     grasp_ps, pre_grasp_ps = get_target_object_pose(target_object=target_object, world2base=world2base)
+        
+    #     start_pose = arm.getEndeffectorPose()
+    #     pose_traj = get_pose_trj(start_pose=start_pose, goal_pose=pre_grasp_ps, 
+    #         world2base=world2base, show_animation=False)
+    #     arm.movePoseTrajectory(pose_traj, timeout=5.)
+    #     arm.movePose(pre_grasp_ps, 5.)
+        
+    #     arm.movePose(grasp_ps, 2.)
+    #     # arm.gripperClose()
+    #     arm.movePose(pre_grasp_ps, 1.)
+
+    #     arm.movePose(sl_ps, 4.)
+    #     # arm.gripperOpen()
+
+    # print(d['storage_right'])
+    # for target_object in d['storage_right']:
+    #     grasp_ps, pre_grasp_ps = get_target_object_pose(target_object=target_object, world2base=world2base)
+        
+    #     start_pose = arm.getEndeffectorPose()
+    #     pose_traj = get_pose_trj(start_pose=start_pose, goal_pose=pre_grasp_ps, 
+    #         world2base=world2base, show_animation=False)
+    #     arm.movePoseTrajectory(pose_traj, timeout=5.)
+    #     arm.movePose(pre_grasp_ps, timeout=5.)
+        
+    #     arm.movePose(grasp_ps, 2.)
+    #     # arm.gripperClose()
+    #     arm.movePose(pre_grasp_ps, 1.)
+
+    #     arm.movePose(sr_ps, 4.)
+    #     # arm.gripperOpen()
+
+

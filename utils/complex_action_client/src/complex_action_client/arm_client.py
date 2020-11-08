@@ -590,6 +590,7 @@ class ArmClient(object):
 
         
     def movePose(self, pose, timeout=1.0, no_wait=False, **kwargs):
+        rospy.logout('ArmClient: movePose')
         """
         Run a point-to-point movement in cartesian space
         The reference frame of the pose input is arm_baselink

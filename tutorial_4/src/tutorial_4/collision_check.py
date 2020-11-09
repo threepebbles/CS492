@@ -272,15 +272,15 @@ if __name__ == '__main__':
 
     arm_kdl = create_kdl_kin('base_link', 'gripper_link')
     manager = CollisionChecker(arm_kdl, viz=True)
-    ## state = [0, -1.8, 1.0,0,0,0]
+
+    # desired joint state
     state = [0, 0, 0,-3,-1.57,0]
-    
+
+    # update a collision manager for objects
     manager.update_manager()
     rospy.sleep(0.1)
-    print manager.in_collision(state)
-    rospy.sleep(0.1)
-    manager.update_manager()
-    rospy.sleep(0.1)
+
+    # check if an arm collides with objects    
     print manager.in_collision(state)
     rospy.sleep(0.1)
     rospy.spin()

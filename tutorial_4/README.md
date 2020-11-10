@@ -5,6 +5,7 @@ First, install new dependencies,
 ~~~~bash
 cd ~/catkin_ws
 rosdep install --from-paths src --ignore-src --rosdistro=melodic -y
+sudo apt-get install ros-melodic-realsense2-description
 ~~~~
 
 Then, clone a camera-related gazebo plugin repository

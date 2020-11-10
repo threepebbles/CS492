@@ -30,10 +30,16 @@ roslaunch manip_challenge ur5_robotiq_2f85.launch
 ### Collision Check
 1. Visualize your collision meshes/boxes
 2. Check collision between the robot and objects
+~~~~bash
+roslaunch tutorial_4 collision_check.launch
+~~~~
 
 ### Vision
 1. Load a Gazebo vision plugin
 2. Visualize it via RViZ
+~~~~bash
+rosrun rviz rviz
+~~~~
 
 ### Today's attendance quiz!
 1. Add a new object in Gazebo. Place your arm around the object (virtually overlapping it!) and run the collision checker. Please, capture Gazebo, RViZ screens, and the terminal printout.

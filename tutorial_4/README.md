@@ -40,8 +40,3 @@ roslaunch manip_challenge ur5_robotiq_2f85.launch
 
 2. Randomly place objects. Then, capture the Gazebo screen as well as the point cloud of the environment.
 
-
-
-
-
-%sudo apt install ros-melodic-realsense2-camera ros-melodic-realsense2-description

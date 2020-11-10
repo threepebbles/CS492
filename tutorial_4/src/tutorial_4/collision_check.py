@@ -274,7 +274,7 @@ if __name__ == '__main__':
     manager = CollisionChecker(arm_kdl, viz=True)
 
     # desired joint state
-    state = [0, 0, 0,-3,-1.57,0]
+    state = [0.4, 0, 0,-3,-1.57,0]
 
     # update a collision manager for objects
     manager.update_manager()

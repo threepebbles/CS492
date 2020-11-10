@@ -13,7 +13,7 @@ if __name__ == '__main__':
     
     # Query the pose of an object
     try:
-        obj_pose = pose_srv_req("eraser").pose
+        obj_pose = pose_srv_req("glue").pose
     except rospy.ServiceException, e:
         print "Pose Service is not available: %s"%e
 

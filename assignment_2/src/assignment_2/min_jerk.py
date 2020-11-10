@@ -37,7 +37,7 @@ def min_jerk(start, goal, dur, freq=100):
     P = int(freq * dur) # the number of points
 
     time = []
-    X  = []
+    X  = [] # joint angle
     Xd = []
     Xdd  = []
     Xddd = []
@@ -45,16 +45,18 @@ def min_jerk(start, goal, dur, freq=100):
         # ------------------------------------------------------
         # Place your code here
         # ------------------------------------------------------
-        #t = 
+        t = 0.0 + i/(P-1.0)*(dur-0)
 
         time.append(t)
-        #X.append( )
-        #Xd.append( )
-        #Xdd.append( )
-        #Xddd.append( )
+        X.append( start + (goal-start)*( 10.0*(t/dur)**3 - 15.0*(t/dur)**4 + 6.0*(t/dur)**5 ))
+        Xd.append( start + (goal-start)*( 30.0*(t/dur)**2 - 60.0*(t/dur)**3 + 30.0*(t/dur)**4 ) )
+        Xdd.append( start + (goal-start)*( 60.0*(t/dur) - 180.0*(t/dur)**2 + 120.0*(t/dur)**3 ) )
+        Xddd.append( start + (goal-start)*(60.0/dur) - 360.0*(t/dur) + 360.0*(t/dur)**2)
         # ------------------------------------------------------
-
-    return time, np.array(X), np.array(Xd), np.array(Xdd), np.array(Xddd)
+    
+    # print(X)    
+    print len(time)
+    return np.array(time), np.array(X), np.array(Xd), np.array(Xdd), np.array(Xddd)
 
 
 if __name__ == '__main__':
@@ -80,13 +82,13 @@ if __name__ == '__main__':
         plt.plot(range(length), trj[:,i], 'r-', markersize=12)
 
         ax = fig.add_subplot(D, 4, i*4+2)
-        plt.plot(range(length), trj_vel[:,i], 'r-', markersize=12)
+        plt.plot(range(length), trj_vel[:,i], 'g-', markersize=12)
 
         ax = fig.add_subplot(D, 4, i*4+3)
-        plt.plot(range(length), trj_acc[:,i], 'r-', markersize=12)
+        plt.plot(range(length), trj_acc[:,i], 'b-', markersize=12)
 
         ax = fig.add_subplot(D, 4, i*4+4)
-        plt.plot(range(length), trj_jerk[:,i], 'r-', markersize=12)
+        plt.plot(range(length), trj_jerk[:,i], 'c-', markersize=12)
         
     plt.show()
 

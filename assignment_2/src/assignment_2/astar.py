@@ -153,6 +153,7 @@ def astar_planning(start, goal, actions, resolution, grid_limits,
         a list of coordinate values that is the shortest path from 
         the start to the goal.
     """
+    norm_ord=2
     if type(grid_limits) is not np.ndarray: grid_limits = np.array(grid_limits)
     grid_dim    = np.round((grid_limits[1]-grid_limits[0])/resolution+1).astype(int)
     
@@ -161,7 +162,7 @@ def astar_planning(start, goal, actions, resolution, grid_limits,
     # Set a start node
     start_node = Node(start,
                       get_grid_index(start, resolution, grid_limits, grid_dim),
-                      0, np.linalg.norm(np.array(start)-goal), -1)
+                      0, np.linalg.norm(np.array(start)-goal, ord=norm_ord), -1)
     openset[start_node.idx] = start_node
 
     # Set a goal node
@@ -172,35 +173,52 @@ def astar_planning(start, goal, actions, resolution, grid_limits,
     print("Start and goal indices: {} and {}".format(start_node.idx,
                                                          goal_node.idx))
 
-    
+    # import matplotlib.pyplot as plt
+    # import sys
+    # env = kwargs['env']
+    # env.render()
     while True:
         # Empty openset
         if len(openset) == 0: return None
 
+        cur_idx  = min(openset, key=lambda o: (openset[o].cost)) # cost = g(n) + h(n)
+        cur_node = openset[cur_idx]
+
         #------------------------------------------------------------
         # ADD YOUR CODE
         #------------------------------------------------------------
-        #cur_idx  = min(openset, key=lambda o: ....) 
-        #cur_node = ... 
-
-        #if cur_idx == goal_node.idx :
-        # ...
-        #------------------------------------------------------------
-
+        # Break if reach to the goal
+        if cur_idx == goal_node.idx:
+            closedset[cur_idx] = cur_node
+            break
+        
         # Remove the item from the open set
         del openset[cur_idx]
-
-        #------------------------------------------------------------
-        # ADD YOUR CODE
-        #------------------------------------------------------------        
         # Add it to the closed set
         closedset[cur_idx] = cur_node
 
+        # plot in real time
+        # ids = np.round((cur_node.pos-grid_limits[0])/resolution).astype(int)
+        # plt.plot(ids[0], ids[1], '.r')
+        # plt.pause(0.00001)
+
         # expand nodes based on available actions
-        #for i, action in enumerate(actions): 
-            #next_pos = cur_node.pos+action
-            # ...
-            
+        for i, action in enumerate(actions): 
+            next_pos = cur_node.pos + action
+            next_idx = get_grid_index(next_pos, resolution, grid_limits, grid_dim)
+
+            if ((is_valid(next_pos, grid_limits, obstacle_tree, robot_size)==False) or (next_idx in closedset)):
+                continue 
+
+            if next_idx in openset:
+                next_cost = (cur_node.cost - cur_node.h) + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord) + openset[next_idx].h
+                if(next_cost < openset[next_idx].cost):
+                    openset[next_idx] = Node(next_pos, next_idx, next_cost, openset[next_idx].h, cur_idx)
+            else:
+                next_h = np.linalg.norm(goal_node.pos - next_pos, ord=norm_ord)
+                next_cost = (cur_node.cost - cur_node.h) + np.linalg.norm(next_pos - cur_node.pos, ord=norm_ord) + next_h
+                openset[next_idx] = Node(next_pos, next_idx, next_cost, next_h, cur_idx)
+
         #------------------------------------------------------------
 
     # Track the path from goal to start
@@ -208,11 +226,14 @@ def astar_planning(start, goal, actions, resolution, grid_limits,
     #------------------------------------------------------------
     # ADD YOUR CODE
     #------------------------------------------------------------
-    # ...
-    #while prev_idx != start_node.idx:
-    # ...
+    prev_idx = goal_node.idx
+    while prev_idx != start_node.idx:
+        cur_node = closedset[prev_idx]
+        path.append(cur_node.pos)
+        prev_idx = cur_node.prev_idx
+    
     #------------------------------------------------------------
-    return path[::-1]
+    return path[::-1], closedset
 
                 
 

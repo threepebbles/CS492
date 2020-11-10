@@ -6,6 +6,8 @@ import dijkstra
 import astar
 from sklearn.neighbors import BallTree
 
+import matplotlib.pyplot as plt
+
 
 
 def generate_obstacles(resolution=1):
@@ -45,15 +47,15 @@ if __name__ == '__main__':
     obstacles, obstacle_tree = generate_obstacles(resolution)
     
     # actions 
-    actions = [[-1,-1,-1], [-1,0,-1], [-1,1,-1], [0,-1,-1],
-               [0,0,-1], [0,1,-1], [1,-1,-1], [1,0,-1],
-               [1,1,-1], [-1,-1,0], [-1,0,0], [-1,1,0],
-               [0,-1,0], [0,1,0], [1,-1,0], [1,0,0],
-               [1,1,0], [-1,-1,1], [-1,0,1], [-1,1,1],
-               [0,-1,1], [0,0,1], [0,1,1], [1,-1,1],
-               [1,0,1], [1,1,1] ]
+    # actions = [[-1,-1,-1], [-1,0,-1], [-1,1,-1], [0,-1,-1],
+    #            [0,0,-1], [0,1,-1], [1,-1,-1], [1,0,-1],
+    #            [1,1,-1], [-1,-1,0], [-1,0,0], [-1,1,0],
+    #            [0,-1,0], [0,1,0], [1,-1,0], [1,0,0],
+    #            [1,1,0], [-1,-1,1], [-1,0,1], [-1,1,1],
+    #            [0,-1,1], [0,0,1], [0,1,1], [1,-1,1],
+    #            [1,0,1], [1,1,1] ]
     # if you want to use below, please specify the actions on the report.
-    ##actions = [[-1,0,0], [0,-1,0], [1,0,0], [0,1,0],[0,0,-1],[0,0,1]]
+    actions = [[-1,0,0], [0,-1,0], [1,0,0], [0,1,0],[0,0,-1],[0,0,1]]
     actions = np.array(actions)*resolution
     
     # initialize openai gym
@@ -73,17 +75,30 @@ if __name__ == '__main__':
     ## path = dijkstra.dijkstra_planning(start, goal, actions,
     ##                                   resolution, grid_limits,
     ##                                   obstacle_tree, robot_size)
-    path = astar.astar_planning(start, goal, actions,
+    path, closedset = astar.astar_planning(start, goal, actions,
                                     resolution, grid_limits,
                                     obstacle_tree, robot_size)
-    
+    # plot explored nodes
+    env.render()
+    plt.title("number of explored nodes: {}".format(len(closedset)))
+    # for key, explored_node in closedset.items():
+    #     ids = np.round((explored_node.pos-grid_limits[0])/resolution).astype(int)
+    #     env.ax.plot(ids[0:1],
+    #                  ids[1:2],
+    #                  ids[2:3], '.r')
+    # raw_input()
+    # import sys
+    # sys.exit()
+
     for i, p in enumerate(path):
         if i==0: continue
         #------------------------------------------------------------
         # ADD YOUR CODE
         #------------------------------------------------------------
-        #action =
+        action = path[i] - path[i-1]
         #------------------------------------------------------------
         env.render()
         env.step(action)
+        
+    raw_input()
     env.close()

@@ -5,6 +5,8 @@ import cs492_gym
 import astar
 from sklearn.neighbors import BallTree
 
+import matplotlib.pyplot as plt
+
 
 
 def generate_obstacles(xlim, ylim):
@@ -52,7 +54,7 @@ if __name__ == '__main__':
 
     # Initialize variables
     start = [5.,55.]
-    goal  = [55.,5.]
+    goal  = [55.,10.]
     obstacles, obstacle_tree = generate_obstacles([0,60],[0,60])
     resolution  = 1.0
     robot_size = 0.5
@@ -60,8 +62,8 @@ if __name__ == '__main__':
     # actions 
     actions = [[-1,0], [0,-1], [1,0], [0,1]]
     # if you want to use below, please specify the actions on the report.
-    ## actions = [[-1,0], [0,-1], [1,0], [0,1],
-    ##            [-1,-1],[-1,1],[1,-1],[1,1],]
+    # actions = [[-1,0], [0,-1], [1,0], [0,1],
+    #            [-1,-1],[-1,1],[1,-1],[1,1],]
 
     # initialize openai gym
     env = gym.make("reaching-v0")
@@ -77,19 +79,28 @@ if __name__ == '__main__':
                    env.observation_space.high]
 
     # run your algorithm
-    path = astar.astar_planning(start, goal, actions,
+    path, closedset = astar.astar_planning(start, goal, actions,
                                     resolution, grid_limits,
-                                    obstacle_tree, robot_size)
-    
+                                    obstacle_tree, robot_size, env=env)
+
+    env.render()
+    plt.title("number of explored nodes: {}".format(len(closedset)))
+    for key, explored_node in closedset.items():
+        ids = np.round((explored_node.pos-grid_limits[0])/resolution).astype(int)
+        # print(explored_node.pos, ids)
+        plt.plot(ids[0], ids[1], '.r')
+        # plt.plot(explored_node.pos[0], explored_node.pos[1], '.r')
+
     for i, p in enumerate(path):
         if i==0: continue
         #------------------------------------------------------------
         # ADD YOUR CODE
         #------------------------------------------------------------
-        #action = 
+        action = path[i]-path[i-1]
         #------------------------------------------------------------
         env.render()
         env.step(action)
         ## env.step(env.action_space.sample())
 
+    raw_input()
     env.close()

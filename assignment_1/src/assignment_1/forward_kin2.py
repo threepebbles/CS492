@@ -59,49 +59,31 @@ def get_T(d, theta, a, alpha):
     return np.dot(dt, aa)
 
 
+# Modelling and Control of Robot Manipulators 36p
 def your_forward_kinematics(theta, T):
     #------------------------------------------------------------
     # Place your homogeneous transformation matrix here! 
 
-    tr = T[0][0]+T[1][1]+T[2][2]
-    
-    if (tr > 0.0):
-        S = np.sqrt(tr+1.0) * 2
-        qw = 0.25 / S
-        qx = (T[2][1] - T[1][2]) * S
-        qy = (T[0][2] - T[2][0]) * S 
-        qz = (T[1][0] - T[0][1]) * S 
-    elif ((T[0][0] > T[1][1])&(T[0][0] > T[2][2])):
-        S = np.sqrt(1.0 + T[0][0] - T[1][1] - T[2][2]) * 2.0;
-        qw = (T[2][1] - T[1][2]) / S
-        qx = 0.25 * S
-        qy = (T[0][1] + T[1][0]) / S 
-        qz = (T[0][2] + T[2][0]) / S 
-    elif (T[1][1] > T[2][2]):
-        S = np.sqrt(1.0 + T[1][1] - T[0][0] - T[2][2]) * 2.0
-        qw = (T[0][2] - T[2][0]) / S
-        qx = (T[0][1] + T[1][0]) / S
-        qy = 0.25 * S
-        qz = (T[1][2] + T[2][1]) / S
-    else:
-        S = np.sqrt(1.0 + T[2][2] - T[0][0] - T[1][1]) * 2.0
-        qw = (T[1][0] - T[0][1]) / S
-        qx = (T[0][2] + T[2][0]) / S
-        qy = (T[1][2] + T[2][1]) / S
-        qz = 0.25 * S
+    eta = np.sqrt(T[0][0]+T[1][1]+T[2][2]+1)/2.
+    sgn = [-1, -1, -1]
+    if T[2][1]-T[1][2]>=0: sgn[0]=1
+    if T[0][2]-T[2][0]>=0: sgn[1]=1
+    if T[1][0]-T[0][1]>=0: sgn[2]=1
 
+    epsilon = np.array([sgn[0]*np.sqrt(T[0][0]-T[1][1]-T[2][2]+1),
+        sgn[1]*np.sqrt(T[1][1]-T[2][2]-T[0][0]+1),
+        sgn[2]*np.sqrt(T[2][2]-T[0][0]-T[1][1]+1)])/2.
     # you can print out a pose message by filling followings
     # please, do not import external library. 
     ps = Pose()
     ps.position.x = T[0][3]
     ps.position.y = T[1][3]
     ps.position.z = T[2][3]
-    ps.orientation.x = qx
-    ps.orientation.y = qy
-    ps.orientation.z = qz
-    ps.orientation.w = qw   
+    ps.orientation.x = epsilon[0]
+    ps.orientation.y = epsilon[1]
+    ps.orientation.z = epsilon[2]
+    ps.orientation.w = eta   
     #------------------------------------------------------------
-    
 
     return ps
     

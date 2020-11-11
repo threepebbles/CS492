@@ -6,6 +6,7 @@ First, install new dependencies,
 cd ~/catkin_ws
 rosdep install --from-paths src --ignore-src --rosdistro=melodic -y
 sudo apt-get install ros-melodic-realsense2-description
+cd "tutorial_4 folder"
 sudo pip install -r requirements.txt
 ~~~~
 

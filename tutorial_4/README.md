@@ -46,6 +46,13 @@ rosrun rviz rviz
 
 ### Today's attendance quiz!
 1. Add a new object in Gazebo. Place your arm around the object (virtually overlapping it!) and run the collision checker. Please, capture Gazebo, RViZ screens, and the terminal printout.
+~~~~bash
+roslaunch manip_challenge ur5_setup.launch
+"Please, add your object"
+roslaunch manip_challenge ur5_robotiq_2f85.launch
+"Please, run the collision checker"
+~~~~
+
 
 2. Randomly place objects. Then, capture the Gazebo screen as well as the point cloud of the environment.
 

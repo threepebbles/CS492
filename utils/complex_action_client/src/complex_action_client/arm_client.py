@@ -634,60 +634,8 @@ class ArmClient(object):
 
     # filled
     def movePoseTrajectory(self, poses, timeout=5., **kwargs):
-        """ """
-        rospy.logout('ArmClient: movePoseTrajectory')
-        self.goal_viz(poses[-1])
-
-        goal_poses = []
-        for ps in poses:
-            goal_poses.append( self.detachTool(ps) )
-        timeout /= self._timeout_scale
-
-        # find the desired joint angles according to goal_poses
-        limb_joints = self.ik_request(goal_poses) # {'joint name': }
-
-        if limb_joints is False:
-            rospy.logerr("IK failed to return a value")
-            return GoalStatus.REJECTED
-        for joint in self._joint_names:
-            if len(limb_joints[joint]) != len(goal_poses):
-                rospy.logerr("IK failed to find right number of solution. " + str(len(limb_joints[joint])) + " < " + str(len(goal_poses)))
-                return GoalStatus.REJECTED
-        
-        # reordering joint angles wrt joint names
-        jnt_pos_l = []
-        for i in range(len(limb_joints[joint])):
-            jnt_pos = [limb_joints[joint][i] for joint in self._joint_names]
-            jnt_pos_l.append(jnt_pos)
-        jnt_pos_l = np.array(jnt_pos_l).T
-
-        
-        # Check difference between current joint angles and start joint angles
-        jnt_ang = self.getDesJointAngles()
-        filter_size = 15
-        # moving average filter and zero velocity padding
-        new_jnt_pos_l = []
-        for i in range(self._n_joints):
-            new_jnt_pos = [jnt_ang[i]]*int(filter_size*1.5) +\
-                list(jnt_pos_l[i]) + [jnt_pos_l[i][-1]]*int(filter_size/3)
-            jnt_pos = np.convolve(new_jnt_pos,np.ones((filter_size,))/float(filter_size), mode='valid')
-            new_jnt_pos_l.append(jnt_pos)
-        jnt_pos_l = np.array(new_jnt_pos_l).T
-
-        # check max velocity TODO: zero-length time step may cause maximum velocity
-        dt = timeout / float(len(jnt_pos_l))
-        t  = 0; i = 0        
-        self._clear()
-        for i in xrange(1,len(jnt_pos_l)):
-            delta = np.array(jnt_pos_l[i]) - np.array(jnt_pos_l[i-1])
-            n = np.ceil(np.amax(np.abs(delta / self._jnt_max_step)))
-            if dt*n < 1e-6: continue
-            t += dt*n
-            self._add_point(jnt_pos_l[i], timeout=t)
-
-        self._client.send_goal_and_wait(self._goal, rospy.Duration.from_sec(int(t)+1))
-        ## self._client.send_goal_and_wait(self._goal, rospy.Duration.from_sec(timeout))
-        return GoalStatus.SUCCEEDED
+        """ Move the end-effector following a pose trajectory """
+        return NotImplemented
     
 
     def movePoseRelative(self, pose, timeout=15.0, frame='ur_arm_base_link', check_contact=False,

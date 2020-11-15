@@ -523,7 +523,6 @@ class ArmClient(object):
         rospy.logout('ArmClient: moveJoint')
         # To avoid start configuration errors on a real robot, need to repeat twice.
         cur_positions = self.getDesJointAngles()
-        cur_positions = self.getDesJointAngles()
         
         if velocities is None:
             # Max joint velocity
@@ -577,7 +576,6 @@ class ArmClient(object):
         self._clear()
         for i, jnt_pos in enumerate(new_jnt_pos_l):
             self._add_point(jnt_pos, timeout=progress[i]*float(timeout))
-        self._add_point(jnt_pos, timeout=timeout)                
 
         self._client.send_goal_and_wait(self._goal, rospy.Duration.from_sec(timeout))
         return GoalStatus.SUCCEEDED
@@ -843,3 +841,30 @@ class ArmClient(object):
 
         self._traj_viz_pub.publish(obj)
             
+    # -----------------------------------------------------------------------------------------
+    def get_real_ik(self, pose):
+        rospy.logout('ArmClient: get_real_ik')
+        """
+        Run a point-to-point movement in cartesian space
+        The reference frame of the pose input is arm_baselink
+        """
+        ee_ps    = self.detachTool(pose)
+
+        # IK
+        bx=5e-3; by=5e-3; bz=5e-3; brx=1e-2; bry=1e-2; brz=1e-2 
+        for i in range(10):
+            ik_goal = self.ik_request(ee_ps,
+                                      bx=bx, by=by, bz=bz,
+                                      brx=brx, bry=bry, brz=brz )
+            if ik_goal is not False: break
+            bx *= 3.; by *= 3.; bz *= 3.
+            brx *= 3.; bry *= 3.; brz *= 3.
+            
+        if ik_goal is False:
+            rospy.logerr("Maybe unreachable goal pose... ")
+            self._client.stop_tracking_goal() # to avoid returning the result of the previous'goal
+            # return GoalStatus.REJECTED
+            return -1
+            
+        position = [float(ik_goal[joint][0]) for joint in self._joint_names]
+        return position

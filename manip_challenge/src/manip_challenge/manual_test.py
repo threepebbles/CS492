@@ -174,8 +174,8 @@ if __name__ == '__main__':
         print("Moving {}...".format(target_object))
         grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=2)
         move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(pre_grasp_ps), 
-                        world2base=world2base, dimension=6, timeout=5.)
-        rospy.sleep(5)
+                        world2base=world2base, dimension=6, timeout=3.)
+        rospy.sleep(3)
 
         move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(grasp_ps), 
                         world2base=world2base, dimension=6, timeout=2.)
@@ -192,8 +192,8 @@ if __name__ == '__main__':
         pre_sl_ps.position.x = xs[i]
         pre_sl_ps.position.y = ys[i]
         move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(pre_sl_ps), 
-                        world2base=world2base, dimension=6, timeout=5.)
-        rospy.sleep(5.)
+                        world2base=world2base, dimension=6, timeout=3.)
+        rospy.sleep(3.)
         arm.gripperOpen() # place
 
     xs = [ ( storage_right_center[0] + step[0]*(i//3) - step[0] ) for i in range(9) ]
@@ -225,8 +225,8 @@ if __name__ == '__main__':
         pre_sr_ps.position.x = xs[i]
         pre_sr_ps.position.y = ys[i]
         move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(pre_sr_ps), 
-                        world2base=world2base, dimension=6, timeout=5.)
-        rospy.sleep(5.)
+                        world2base=world2base, dimension=6, timeout=3.)
+        rospy.sleep(3.)
         arm.gripperOpen() # place
     
 

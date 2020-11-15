@@ -153,3 +153,6 @@ if __name__ == '__main__':
     
     ## spawn_sdf_object('dropbox', [1.92,0.1,0.6])
     ## spawn_sdf_object('short_table', [2.92,0.1,0.6])
+
+    rospy.loginfo("spawn sdf objects!!")
+    spawn_sdf_object('box', [1.0,0.1,0.6,0,0,0])

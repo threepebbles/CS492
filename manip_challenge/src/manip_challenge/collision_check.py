@@ -32,6 +32,7 @@ from riro_rviz import draw_scene as ds
 from std_msgs.msg import String
 from visualization_msgs.msg import Marker
 
+from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 
 class CollisionChecker(object):
     """Collision detection class
@@ -51,8 +52,8 @@ class CollisionChecker(object):
         self.gazebo_model_path = os.getenv('GAZEBO_MODEL_PATH').split(':')
         rospy.Subscriber("world_model", String, self.wm_callback)
 
-        if viz:
-            self.dsviz = ds.SceneDraw(frame='world', latch=False)
+        # if viz:
+        #     self.dsviz = ds.SceneDraw(frame='world', latch=False)
         
         self.world2baselink  = self.get_baselink_frame()
         self._object_manager = trimesh.collision.CollisionManager()
@@ -101,7 +102,7 @@ class CollisionChecker(object):
             self._object_manager.add_object(model,\
                                             geom,\
                                             misc.KDLframe2Matrix(T))
-            rospy.loginfo("collision manager: new object {}".format(model))
+            # rospy.loginfo("collision manager: new object {}".format(model))
 
         self.robot_geom_dict = self.get_trimesh_arm()
         state = [0,0,0,0,0,0]
@@ -118,7 +119,7 @@ class CollisionChecker(object):
                                            self.robot_geom_dict[link_name]['geom'],\
                                            misc.KDLframe2Matrix(link_T))
 
-            rospy.loginfo("collision manager: new link {}".format(link_name))
+            # rospy.loginfo("collision manager: new link {}".format(link_name))
                                                
 
     def update_manager(self):
@@ -135,7 +136,7 @@ class CollisionChecker(object):
 
             self._object_manager.set_transform(model,\
                                                misc.KDLframe2Matrix(T))
-            print ("Updated {} in the collision manager".format(model))
+            # print ("Updated {} in the collision manager".format(model))
             
             if self.viz:
                 self.rviz_pub(self.obj_geom_dict[model], T,
@@ -267,7 +268,7 @@ class CollisionChecker(object):
     
 
 if __name__ == '__main__':
-    rospy.init_node("test")
+    rospy.init_node("collision_check_node")
     rospy.sleep(1)
 
     arm_kdl = create_kdl_kin('base_link', 'gripper_link')
@@ -275,15 +276,28 @@ if __name__ == '__main__':
 
     # desired joint state
     # state = [0, 0, 0,-3,-1.57,0]
-    state = [-0.2, 0, 0,0,0,0]
+    # state = [-0.2, 0, 0,0,0,0]
+    arm = UR5ArmClient(timeout_scale=1., sim=True)
+    state = arm.getJointAngles()
+    # print(state)
+    # [1.36741769, -0.40417682, -1.04669086, -0.11158767, -1.56817508, 1.37169917]
 
     # update a collision manager for objects
     manager.update_manager()
     rospy.sleep(0.1)
 
     # check if an arm collides with objects    
-    print manager.in_collision(state)
+    flag, collision_set = manager.in_collision(state)
+    print("type(flag):", type(flag))
+    print flag
+    print collision_set
+
+    if(flag):
+        arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
+    else:
+        arm.gripperOpen()
+        arm.gripperClose()
+        arm.gripperOpen()
+
     rospy.sleep(0.1)
     rospy.spin()
-    
-    ## from IPython import embed; embed(); sys.exit()

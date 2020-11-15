@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+
+  <arg name="gazebo_models" value="$(find
+                                   manip_challenge)/data/models:$(find
+                                   ur5_gazebo)/models:$(optenv
+                                   GAZEBO_MODEL_PATH)" />
+  
+  <!-- Export env variable so that gazebo finds our models -->
+  <env name="GAZEBO_MODEL_PATH" value="$(arg gazebo_models)"/>
+  
+  <node name="collison_check" pkg="manip_challenge" type="collision_check.py"
+        output="screen"/>
+
+</launch>

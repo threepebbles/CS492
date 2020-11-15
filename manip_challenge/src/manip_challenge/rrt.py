@@ -9,12 +9,28 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
+# for UR5 arm
 from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
-from complex_action_client import misc, min_jerk, quaternion as qt
 
-from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
-from riro_srvs.srv import String_None, String_String, String_Pose, String_PoseResponse
-
+# for collision check
+import collision_check
+import rospy, rospkg
+import numpy as np
+import copy
+import os, sys
+import threading
+import trimesh
+import json
+from bs4 import BeautifulSoup
+import tf
+from complex_action_client import misc
+from urdf_parser_py import urdf
+import urdf_parser_py
+import PyKDL
+from pykdl_utils.kdl_kinematics import create_kdl_kin
+from riro_rviz import draw_scene as ds
+from std_msgs.msg import String
+from visualization_msgs.msg import Marker
 
 
 class RRT:
@@ -30,8 +46,6 @@ class RRT:
         def __init__(self, position):
             self.position = [position[i] for i in range(len(position))]
             self.path = []
-            # self.path_x = []
-            # self.path_y = []
             self.parent = None
 
     def __init__(self,
@@ -39,6 +53,7 @@ class RRT:
                  goal_position,
                  obstacle_list,
                  grid_limits,
+
                  arm = None,
                  expand_dis=3.0, # step size
                  path_resolution=0.1, # grid size
@@ -70,6 +85,17 @@ class RRT:
         self.extend_size = extend_size
         self.animation = animation
 
+        if(self.arm is not None):
+            self.arm_kdl = create_kdl_kin('base_link', 'gripper_link')
+            self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, viz=False)
+
+            # update a collision manager for objects
+            self.collision_check_manager.update_manager()
+            rospy.sleep(0.1)
+
+        # # check if an arm collides with objects    
+        # print self.collision_check_manager.in_collision(state)
+
         if self.dimension==3 and self.animation:
             self.fig = plt.figure()
 
@@ -81,7 +107,6 @@ class RRT:
         """
             
         self.node_list = [self.start_node]
-        
         for i in range(self.max_iter):
             rnd_node = self.get_random_node()
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)
@@ -89,8 +114,7 @@ class RRT:
             
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
-            if self.check_valid_position(new_node, arm=self.arm, dimension=self.dimension) \
-                and self.check_collision(new_node, self.obstacle_list, dimension=self.dimension):
+            if self.check_collision(new_node):
                 self.node_list.append(new_node)
 
             if self.animation:
@@ -100,8 +124,7 @@ class RRT:
                 final_node = self.steer(self.node_list[-1], self.end_node,
                                         self.expand_dis)
                 
-                if self.check_valid_position(new_node, arm=self.arm, dimension=self.dimension) \
-                    and self.check_collision(final_node, self.obstacle_list, dimension=self.dimension):
+                if self.check_collision(final_node):
                     return self.generate_final_course(len(self.node_list) - 1)
 
             if self.animation:
@@ -159,13 +182,16 @@ class RRT:
             rnd = self.Node(self.end_node.position)
         return rnd
 
-    def point_resolution(self, p):
+    def point_resolution(self, p, grid_limits=None):
         """
         point resolution with respect to extend_size
         """
+        if (grid_limits==None):
+            grid_limits = self.grid_limits
+
         new_p = []
         for i in range(self.dimension):
-            new_p.append( (p[i] - self.grid_limits[0][i])*self.extend_size + self.grid_limits[0][i]*self.extend_size )
+            new_p.append( (p[i] - grid_limits[0][i])*self.extend_size + grid_limits[0][i]*self.extend_size )
         return np.array(new_p)
 
     def draw_graph(self, rnd=None):
@@ -182,7 +208,13 @@ class RRT:
                     plt.plot([row[0] for row in node.path], [row[1] for row in node.path], "-g")
 
             for (ox, oy, size) in self.obstacle_list:
-                self.plot_circle(ox, oy, size)
+                # plot circle
+                color="-b"
+                deg = list(range(0, 360, 5))
+                deg.append(0)
+                xl = [ox + size * math.cos(np.deg2rad(d)) for d in deg]
+                yl = [oy + size * math.sin(np.deg2rad(d)) for d in deg]
+                plt.plot(xl, yl, color)
 
             plt.plot(self.start_node.position[0], self.start_node.position[1], "xr")
             plt.plot(self.end_node.position[0], self.end_node.position[1], "xr")
@@ -228,14 +260,47 @@ class RRT:
                 [self.start_node.position[2]*self.extend_size, self.end_node.position[2]*self.extend_size],
                  "xr")
             plt.pause(0.01)
+
+        elif(self.dimension==6):
+            self.ax = self.fig.add_subplot(111, projection='3d')
+
+            grid_limits = [[-0.1, -0.7, -0.1], [0.8, 0.7, 1.0]]
+
+            self.ax.set_xlim3d(grid_limits[0][0]*self.extend_size, grid_limits[1][0]*self.extend_size)
+            self.ax.set_ylim3d(grid_limits[0][1]*self.extend_size, grid_limits[1][1]*self.extend_size)
+            self.ax.set_zlim3d(grid_limits[0][2]*self.extend_size, grid_limits[1][2]*self.extend_size)
+
+            for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
+                # plot cuboid obstacles
+                vtcs = np.array([self.point_resolution(p1, grid_limits), self.point_resolution(p2, grid_limits), 
+                    self.point_resolution(p3, grid_limits), self.point_resolution(p4, grid_limits), 
+                    self.point_resolution(p5, grid_limits), self.point_resolution(p6, grid_limits), 
+                    self.point_resolution(p7, grid_limits), self.point_resolution(p8, grid_limits)])
+                
+                self.ax.scatter3D(vtcs[:, 0], vtcs[:, 1], vtcs[:, 2])
+                faces = [[vtcs[0], vtcs[1], vtcs[2], vtcs[3]], [vtcs[0], vtcs[4], vtcs[7], vtcs[3]], 
+                        [vtcs[4], vtcs[5], vtcs[6], vtcs[7]], [vtcs[7], vtcs[6], vtcs[2], vtcs[3]], 
+                        [vtcs[6], vtcs[5], vtcs[1], vtcs[2]], [vtcs[4], vtcs[5], vtcs[1], vtcs[0]]]
+                
+                self.ax.add_collection3d(Poly3DCollection(faces, 
+                    facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
+                
+            if rnd is not None:
+                rnd_pose = misc.pose2list(self.arm.fk_request(rnd.position))
+                plt.plot([rnd_pose[0]*self.extend_size], [rnd_pose[1]*self.extend_size], [rnd_pose[2]*self.extend_size], "^k")
+
+            # for node in self.node_list:
+            #     if node.parent:
+            #         plt.plot([row[0]*self.extend_size for row in node.path], 
+            #             [row[1]*self.extend_size for row in node.path], 
+            #             [row[2]*self.extend_size for row in node.path], "-g")
+
             
-    @staticmethod
-    def plot_circle(x, y, size, color="-b"):  # pragma: no cover
-        deg = list(range(0, 360, 5))
-        deg.append(0)
-        xl = [x + size * math.cos(np.deg2rad(d)) for d in deg]
-        yl = [y + size * math.sin(np.deg2rad(d)) for d in deg]
-        plt.plot(xl, yl, color)
+            # plt.plot([self.start_node.position[0]*self.extend_size, self.end_node.position[0]*self.extend_size], 
+            #     [self.start_node.position[1]*self.extend_size, self.end_node.position[1]*self.extend_size],
+            #     [self.start_node.position[2]*self.extend_size, self.end_node.position[2]*self.extend_size],
+            #      "xr")
+            plt.pause(0.01)
 
     """ 
     find the index of nearest node nearest from rnd_node in node_list 
@@ -247,17 +312,16 @@ class RRT:
 
         return minind
 
-    @staticmethod
-    def check_collision(node, obstacle_list, dimension=2):
-
+    def check_collision(self, node):
         if node is None:
             return False
 
-        if dimension==2:
+        # x,y
+        if self.dimension==2:
             path_x = [row[0] for row in node.path]
             path_y = [row[1] for row in node.path]
             # circle obstacles
-            for (ox, oy, size) in obstacle_list:
+            for (ox, oy, size) in self.obstacle_list:
                 dx_list = [ox - x for x in path_x]
                 dy_list = [oy - y for y in path_y]
                 d_list = [dx * dx + dy * dy for (dx, dy) in zip(dx_list, dy_list)]
@@ -265,15 +329,15 @@ class RRT:
                 if min(d_list) <= size**2:
                     return False  # collision
             return True  # safe
-
-        elif dimension==3:
+        # x,y,z
+        elif self.dimension==3:
             # check collision with the obstacles
             path_x = [row[0] for row in node.path]
             path_y = [row[1] for row in node.path]
             path_z = [row[2] for row in node.path]
 
             # cuboid obstacles
-            for (p1, p2, p3, p4, p5, p6, p7, p8) in obstacle_list:
+            for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
                 for (x, y, z) in zip(path_x, path_y, path_z):
                     # ref: https://math.stackexchange.com/questions/1472049/check-if-a-point-is-inside-a-rectangular-shaped-area-3d
                     
@@ -285,24 +349,15 @@ class RRT:
                     if (0<=np.dot(v,i) and np.dot(v,i)<=np.dot(i,i) and
                         0<=np.dot(v,j) and np.dot(v,j)<=np.dot(j,j) and
                         0<=np.dot(v,k) and np.dot(v,k)<=np.dot(k,k)):
-                        return False # collition
-                    
-            return True
-    
-    @staticmethod
-    def check_valid_position(node, arm=None, dimension=2):
-        # whether the position of the node can be reached by the robot arm or not
-
-        if dimension==2:
+                        return False # collision
             return True
 
-        elif dimension==3:
-            if arm==None:
-                return True
-
-            # if there exists a valid joint solution
-            pose = Pose(position=Point(x=node.position[0], y=node.position[1], z=node.position[2]))
-            return arm.ik_request(pose)
+        # joint angles
+        elif self.dimension==6:
+            # check if an arm collides with objects    
+            flag, _ = self.collision_check_manager.in_collision(node.position)
+            # flag==True: collision
+            return not flag
 
     @staticmethod
     def calc_distance_and_orientation(from_node, to_node):
@@ -320,30 +375,22 @@ def main():
     print("start " + __file__)
 
     dimension = 3
-
     if dimension==2:
-        ############## 2D ######################
-        # ====Search Path with RRT====
         obstacle_list = [(5, 5, 1), (3, 6, 2), (3, 8, 2), (3, 10, 2), (7, 5, 2),
                         (9, 5, 2)]  # [x, y, radius]
-        # Set Initial parameters
         start_position = [0., 0.]
         goal_position = [6.0, 10.0]
         observation_space_low = [-2, -2]
         observation_space_high = [15, 15]
         grid_limits = [observation_space_low, observation_space_high]
-        ############## 2D ######################
+
     elif dimension==3:
-        ############## 3D ######################
-        # ====Search Path with RRT====
-        obstacle_list = []  # [x, y, z, radius]
-        # Set Initial parameters
+        obstacle_list = []  # (p1, p2, ..., p8)
         start_position = [0., 0., 0.]
         goal_position = [6.0, 10.0, 10.]
         observation_space_low = [-2., -2., -2.]
         observation_space_high = [15., 15., 15.]
         grid_limits = [observation_space_low, observation_space_high]
-        ############## 3D ######################
 
 
     show_animation = True

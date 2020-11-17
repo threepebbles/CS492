@@ -82,7 +82,7 @@ def get_object_grasp_pose(target_object, world2base, direction=2):
     
     grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] + vector_a*(obstacles_sizes[target_object][direction%3]/2. - 0.04), obj_pose_l[3:])) )
     pre_grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] + 
-        [0., 0., 0.12], obj_pose_l[3:])) )
+        [0., 0., 0.2], obj_pose_l[3:])) )
 
     return grasp_pose, pre_grasp_pose
 
@@ -215,6 +215,10 @@ if __name__ == '__main__':
         arm.moveJoint(arm.get_real_ik(pre_grasp_ps), timeout=2.)
         rospy.sleep(2)
 
+        move_position2position(start_position=arm.getJointAngles(), goal_position=center_state, 
+                        world2base=world2base, dimension=6, timeout=3.)
+        rospy.sleep(3)
+        
         if(storage=='storage_left'):
             pre_sl_ps.position.x = lxs[lidx]
             pre_sl_ps.position.y = lys[lidx]

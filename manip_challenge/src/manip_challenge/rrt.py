@@ -87,7 +87,7 @@ class RRT:
 
         if(self.arm is not None):
             self.arm_kdl = create_kdl_kin('base_link', 'gripper_link')
-            self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, viz=False)
+            self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, viz=True)
 
             # update a collision manager for objects
             self.collision_check_manager.update_manager()

@@ -71,3 +71,5 @@ if __name__ == '__main__':
 
     get_object_info(target_object)
     
+    # reset_simulation = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+    # reset_simulation()

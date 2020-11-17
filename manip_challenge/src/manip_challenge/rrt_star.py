@@ -35,6 +35,7 @@ class RRT_STAR:
                  goal_position,
                  obstacle_list,
                  grid_limits,
+
                  arm = None,
                  expand_dis=3.0, # step size
                  path_resolution=0.1, # grid size
@@ -492,7 +493,7 @@ def main():
         grid_limits=grid_limits,
         expand_dis=1.0, # step size
         path_resolution=0.1, # grid size
-        goal_sample_rate=5,
+        goal_sample_rate=10,
         max_iter=500,
         dimension=dimension,
         extend_size=100,

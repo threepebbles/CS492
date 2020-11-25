@@ -135,27 +135,38 @@ if __name__ == '__main__':
     # d = {"storage_left": ['book', 'eraser', 'soap2'],
     #     "storage_right": ['snacks', 'biscuits', 'glue', 'soap'] }
 
-
-    import random
     names = ['biscuits', 'book', 'glue', 'snacks', 'eraser', 'soap', 'soap2']
-    positions = [[0.52,0.2,0.6, 0, 0, np.pi/4.], [0.52,-0.2,0.6, 0, 0, np.pi/2.],
-    [0.72,0.3,0.6, 0, np.pi/2., np.pi/4.], [0.6, 0 ,0.6, 0, np.pi/2., 0],
-    [0.72,-0.3,0.6, 0, 0, np.pi/4.], [0.4, 0.,0.6, 0, np.pi/2., 0],
-    [0.72,0.1,0.6, 0, np.pi/2., 0]
+    positions = [[0.52,0.2,0.6, 0, 0, np.pi/2.], [0.52,-0.2,0.6, 0, 0, np.pi/2.],
+    [0.72,0.3,0.6, 0, 0, np.pi/2.], [0.6, 0 ,0.6, 0, 0, np.pi/2.],
+    [0.72,-0.3,0.6, 0, 0, np.pi/2.], [0.4, 0.,0.6, 0, 0, np.pi/2.],
+    [0.72,0.1,0.6, 0, 0, np.pi/2.]
     ]
-    # random.shuffle(names)
-    names[0] = 'soap2'
-    names[1] = 'biscuits'
-    names[2] = 'snacks'
-    names[3] = 'glue'
-    names[4] = 'soap'
-    names[5] = 'eraser'
-    names[6] = 'book'
     
     for i in range(7):
         spawn_sdf_object(names[i], positions[i])    
     rospy.loginfo("spawn sdf objects!!")
     sys.exit()
+
+    # import random
+    # names = ['biscuits', 'book', 'glue', 'snacks', 'eraser', 'soap', 'soap2']
+    # positions = [[0.52,0.2,0.6, 0, 0, 0], [0.52,-0.2,0.6, 0, 0, np.pi/2.],
+    # [0.72,0.3,0.6, 0, np.pi/2., 0], [0.6, 0 ,0.6, 0, np.pi/2., 0],
+    # [0.72,-0.3,0.6, 0, 0, 0], [0.4, 0.,0.6, 0, np.pi/2., 0],
+    # [0.72,0.1,0.6, 0, np.pi/2., 0]
+    # ]
+    # # random.shuffle(names)
+    # names[0] = 'soap2'
+    # names[1] = 'biscuits'
+    # names[2] = 'snacks'
+    # names[3] = 'glue'
+    # names[4] = 'soap'
+    # names[5] = 'eraser'
+    # names[6] = 'book'
+    
+    # for i in range(7):
+    #     spawn_sdf_object(names[i], positions[i])    
+    # rospy.loginfo("spawn sdf objects!!")
+    # sys.exit()
 
 
     # spawn_sdf_object('biscuits', [0.52,0.2,0.6, 0, 0, np.pi/4.])

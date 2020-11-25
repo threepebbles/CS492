@@ -41,12 +41,13 @@ class CollisionChecker(object):
     Trimesh.
     """
 
-    def __init__(self, arm_kdl, viz=False):
+    def __init__(self, arm_kdl, contain_gripper=False, grasping_object=None, viz=False):
         """The constructor"""
         self.arm_kdl         = arm_kdl
         self.viz             = viz
         self.world_model     = None
         self.obj_geom_dict   = {}
+        self.table_geom_dict = {}
         self.robot_geom_dict = {}        
         self._world_lock     = threading.RLock() ## world model lock        
         self.gazebo_model_path = os.getenv('GAZEBO_MODEL_PATH').split(':')
@@ -57,8 +58,13 @@ class CollisionChecker(object):
         
         self.world2baselink  = self.get_baselink_frame()
         self._object_manager = trimesh.collision.CollisionManager()
+        self._table_manager = trimesh.collision.CollisionManager()
         self._robot_manager  = trimesh.collision.CollisionManager()
-        
+
+        self.contain_gripper = contain_gripper
+        self.grasping_object = grasping_object
+
+        # for collision check
         self.init_manager()
 
     def wm_callback(self, msg):
@@ -102,8 +108,9 @@ class CollisionChecker(object):
             self._object_manager.add_object(model,\
                                             geom,\
                                             misc.KDLframe2Matrix(T))
-            rospy.loginfo("collision manager: new object {}".format(model))
+            rospy.loginfo("_object_manager: new object {}".format(model))
 
+        # table objects
         tables = ['storage_left', 'storage_right', 
         'cafe_table', 'cafe_table_right', 'cafe_table_left', 
         'ur5_base']
@@ -120,55 +127,98 @@ class CollisionChecker(object):
                     'trans': T,
                     'size': size}
 
-            self.obj_geom_dict[model] = ret
+            self.table_geom_dict[model] = ret
                 
-            geom  = self.obj_geom_dict[model]['geom']                
+            geom  = self.table_geom_dict[model]['geom']                
             state = pose
-            T     = misc.array2KDLframe(state)*self.obj_geom_dict[model]['trans']
+            T     = misc.array2KDLframe(state)*self.table_geom_dict[model]['trans']
 
-            self._object_manager.add_object(model,\
+            self._table_manager.add_object(model,\
                                             geom,\
                                             misc.KDLframe2Matrix(T))
-            rospy.loginfo("collision manager: new object {}".format(model))
+            rospy.loginfo("_table_manager: new object {}".format(model))
 
+        # links of the robot
         self.robot_geom_dict = self.get_trimesh_arm()
         state = [0,0,0,0,0,0]
         mats = self.arm_kdl.forward_recursive(state)
-
+        # print("robot_geom_dict:", self.robot_geom_dict.keys())
+        
         for i, mat in enumerate(mats):
             ## if i >= len(state): continue
             link_name = self.arm_kdl.chain.getSegment(i).getName()
+            # print("i:{}, name:{}".format(i, link_name))
             link_T = self.world2baselink * misc.mat2KDLframe(mat)
-
+            # print(type(link_T))
             if not(link_name in self.robot_geom_dict.keys()): continue
             link_T *= self.robot_geom_dict[link_name]['trans']
             self._robot_manager.add_object(link_name,\
                                            self.robot_geom_dict[link_name]['geom'],\
                                            misc.KDLframe2Matrix(link_T))
 
+            rospy.loginfo("_robot_manager: new link {}".format(link_name))
+        
+        if(self.contain_gripper):
+            # imaginery gripper_link for rough collision check
+            link_name = "gripper_link" # gripper
+            tmp_T = self.robot_geom_dict['robotiq_coupler']['trans']
+            vector_a = np.array([tmp_T.M.UnitZ()[0], tmp_T.M.UnitZ()[1], tmp_T.M.UnitZ()[2]])
+            pose_l = misc.pose2array(misc.KDLframe2Pose(tmp_T))
+            pose_l[:3] = pose_l[:3] + vector_a*0.1
+            link_T = PyKDL.Frame(tmp_T.M, PyKDL.Vector( pose_l[0], pose_l[1], pose_l[2]))
+
+            # size = [diameter along x axis, diameter along y axis, height]
+            size = [0.1554, 0.1554, 0.2]
+            ret = {'type': 'cylinder',
+                'geom': trimesh.creation.cylinder(radius=0.0777, height=0.2),
+                'trans': link_T,
+                'size': size}
+
+            self.robot_geom_dict[link_name] = ret
+            self._robot_manager.add_object(link_name,\
+                                           ret['geom'],\
+                                           misc.KDLframe2Matrix(ret['trans']))
             rospy.loginfo("collision manager: new link {}".format(link_name))
                                                
 
     def update_manager(self):
         """ Update object states in the collision managers """ 
         for i, model in enumerate(self.world_model):
-            if model not in self.obj_geom_dict.keys(): continue
+            if (model in self.obj_geom_dict.keys()): 
 
-            # world model includes the bottom coordinate only
-            # visual mesh and collision objects may have different frames. 
+                # world model includes the bottom coordinate only
+                # visual mesh and collision objects may have different frames. 
 
-            # pose in gazebo (the bottom frame of objects)
-            state = self.world_model[model]['pose']
-            T     = misc.array2KDLframe(state) * self.obj_geom_dict[model]['trans']
+                # pose in gazebo (the bottom frame of objects)
+                state = self.world_model[model]['pose']
+                T     = misc.array2KDLframe(state) * self.obj_geom_dict[model]['trans']
 
-            self._object_manager.set_transform(model,\
-                                               misc.KDLframe2Matrix(T))
-            print ("Updated {} in the collision manager".format(model))
-            
-            if self.viz:
-                self.rviz_pub(self.obj_geom_dict[model], T,
-                              color=[0,1.,0,0.5],
-                              num_id=100+i)
+                self._object_manager.set_transform(model,\
+                                                   misc.KDLframe2Matrix(T))
+                # print ("Updated {} in the collision manager".format(model))
+                
+                if self.viz:
+                    self.rviz_pub(self.obj_geom_dict[model], T,
+                                  color=[0,1.,0,0.5],
+                                  num_id=100+i)
+
+            elif (model in self.table_geom_dict.keys()): 
+
+                # world model includes the bottom coordinate only
+                # visual mesh and collision objects may have different frames. 
+
+                # pose in gazebo (the bottom frame of objects)
+                state = self.world_model[model]['pose']
+                T     = misc.array2KDLframe(state) * self.table_geom_dict[model]['trans']
+
+                self._table_manager.set_transform(model,\
+                                                   misc.KDLframe2Matrix(T))
+                # print ("Updated {} in the collision manager".format(model))
+                
+                if self.viz:
+                    self.rviz_pub(self.table_geom_dict[model], T,
+                                  color=[0,1.,0,0.5],
+                                  num_id=100+i)
 
                 
     def get_trimesh_object(self, name):
@@ -210,7 +260,6 @@ class CollisionChecker(object):
         rospack = rospkg.RosPack()    
         _urdf = urdf.Robot()
         description = _urdf.from_parameter_server("robot_description")
-
         robot_geom_dict = {}
         for link in description.links:
             if link.collision is None: continue
@@ -243,6 +292,7 @@ class CollisionChecker(object):
                      'geom': mesh,
                      'trans': T,
                      'size': link.collision.geometry.size}
+
             else:
                 rospy.logwarn("Collision Check: {} type is not implemented yet.".format(link.name))
 
@@ -270,8 +320,18 @@ class CollisionChecker(object):
                               color=[1.,0,0,0.5],    
                               num_id=10+i)
 
-        return self._robot_manager.in_collision_other(self._object_manager, return_names=True) 
+        if(self.grasping_object is not None):
+            f1, cs1 = self._robot_manager.in_collision_other(self._object_manager, return_names=True)
+            f2, cs2 = self._robot_manager.in_collision_other(self._table_manager, return_names=True)
 
+            # (collision between robot arm and objects, collision between the grasping object and the other objects)
+            return ( (f1 or f2, cs1|cs2), 
+                (self._object_manager.in_collision_internal(return_names=True)) )
+        else:
+            f1, cs1 = self._robot_manager.in_collision_other(self._object_manager, return_names=True)
+            f2, cs2 = self._robot_manager.in_collision_other(self._table_manager, return_names=True)
+            
+            return (f1 or f2, cs1|cs2)
 
     def rviz_pub(self, d, T, color=[1,0,0,0.5], num_id=10):
         """ Publish a visualization msg of an object """
@@ -289,6 +349,13 @@ class CollisionChecker(object):
                                 color,
                                 num_id,
                                 Marker.CUBE)
+        elif d['type'] == 'cylinder':
+            l = misc.KDLframe2List(T)
+            self.dsviz.pub_body(l[:3], l[3:],
+                                d['size'],
+                                color,
+                                num_id,
+                                Marker.CYLINDER)
         else:
             return rospy.logwarn("Collision Check: {} type is not implemented yet.".format(d['type']))
 
@@ -299,14 +366,15 @@ if __name__ == '__main__':
     rospy.sleep(1)
     
     arm = UR5ArmClient(timeout_scale=1., sim=True)
-
+    arm.gripperOpen()
     arm_kdl = create_kdl_kin('base_link', 'gripper_link')
-    manager = CollisionChecker(arm_kdl, viz=True)
+    manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object="soap", viz=True)
 
     # desired joint state
-    state = [0, 0.5, 0,-3,-1.57,0]
-    # state = [-0.2, 0, 0,0,0,0]
-    # state = arm.getJointAngles()
+    # state = [-0.095, -0.53, 0.2, -1,-1.57,0]
+    state = arm.getJointAngles()
+    state[3] = -0.40*np.pi
+    print(state)
     # print(state)
     # [1.36741769, -0.40417682, -1.04669086, -0.11158767, -1.56817508, 1.37169917]
 
@@ -316,9 +384,8 @@ if __name__ == '__main__':
 
     # check if an arm collides with objects    
     flag, collision_set = manager.in_collision(state)
-    # print("type(flag):", type(flag))
-    print flag
-    print collision_set
+    # print flag
+    # print collision_set
 
     # if(flag):
     #     arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)

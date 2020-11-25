@@ -9,9 +9,6 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
-# for UR5 arm
-from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
-
 # for collision check
 import collision_check
 import rospy, rospkg
@@ -53,8 +50,6 @@ class RRT:
                  goal_position,
                  obstacle_list,
                  grid_limits,
-
-                 arm = None,
                  expand_dis=3.0, # step size
                  path_resolution=0.1, # grid size
                  goal_sample_rate=5,
@@ -71,7 +66,6 @@ class RRT:
         grid_limits: Random Sampling Area [minx, miny, minz, ...], [maxx, maxy, maxz, ...]
 
         """
-        self.arm = arm
         self.start_node = self.Node(start_position)
         self.end_node = self.Node(goal_position)
         self.grid_limits = grid_limits
@@ -85,7 +79,7 @@ class RRT:
         self.extend_size = extend_size
         self.animation = animation
 
-        if(self.arm is not None):
+        if(self.dimension==6):
             self.arm_kdl = create_kdl_kin('base_link', 'gripper_link')
             self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, viz=True)
 
@@ -117,8 +111,8 @@ class RRT:
             if self.check_collision(new_node):
                 self.node_list.append(new_node)
 
-            if self.animation:
-                self.draw_graph(rnd_node)
+            # if self.animation:
+            #     self.draw_graph(rnd_node)
 
             if self.calc_dist_to_goal(self.node_list[-1]) <= self.expand_dis:
                 final_node = self.steer(self.node_list[-1], self.end_node,
@@ -127,8 +121,8 @@ class RRT:
                 if self.check_collision(final_node):
                     return self.generate_final_course(len(self.node_list) - 1)
 
-            if self.animation:
-                self.draw_graph(rnd_node)
+            # if self.animation:
+                # self.draw_graph(rnd_node)
 
         return None  # cannot find path
 
@@ -261,33 +255,33 @@ class RRT:
                  "xr")
             plt.pause(0.01)
 
-        elif(self.dimension==6):
-            self.ax = self.fig.add_subplot(111, projection='3d')
+        # elif(self.dimension==6):
+        #     self.ax = self.fig.add_subplot(111, projection='3d')
 
-            grid_limits = [[-0.1, -0.7, -0.1], [0.8, 0.7, 1.0]]
+        #     grid_limits = [[-0.1, -0.7, -0.1], [0.8, 0.7, 1.0]]
 
-            self.ax.set_xlim3d(grid_limits[0][0]*self.extend_size, grid_limits[1][0]*self.extend_size)
-            self.ax.set_ylim3d(grid_limits[0][1]*self.extend_size, grid_limits[1][1]*self.extend_size)
-            self.ax.set_zlim3d(grid_limits[0][2]*self.extend_size, grid_limits[1][2]*self.extend_size)
+        #     self.ax.set_xlim3d(grid_limits[0][0]*self.extend_size, grid_limits[1][0]*self.extend_size)
+        #     self.ax.set_ylim3d(grid_limits[0][1]*self.extend_size, grid_limits[1][1]*self.extend_size)
+        #     self.ax.set_zlim3d(grid_limits[0][2]*self.extend_size, grid_limits[1][2]*self.extend_size)
 
-            for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
-                # plot cuboid obstacles
-                vtcs = np.array([self.point_resolution(p1, grid_limits), self.point_resolution(p2, grid_limits), 
-                    self.point_resolution(p3, grid_limits), self.point_resolution(p4, grid_limits), 
-                    self.point_resolution(p5, grid_limits), self.point_resolution(p6, grid_limits), 
-                    self.point_resolution(p7, grid_limits), self.point_resolution(p8, grid_limits)])
+        #     for (p1, p2, p3, p4, p5, p6, p7, p8) in self.obstacle_list:
+        #         # plot cuboid obstacles
+        #         vtcs = np.array([self.point_resolution(p1, grid_limits), self.point_resolution(p2, grid_limits), 
+        #             self.point_resolution(p3, grid_limits), self.point_resolution(p4, grid_limits), 
+        #             self.point_resolution(p5, grid_limits), self.point_resolution(p6, grid_limits), 
+        #             self.point_resolution(p7, grid_limits), self.point_resolution(p8, grid_limits)])
                 
-                self.ax.scatter3D(vtcs[:, 0], vtcs[:, 1], vtcs[:, 2])
-                faces = [[vtcs[0], vtcs[1], vtcs[2], vtcs[3]], [vtcs[0], vtcs[4], vtcs[7], vtcs[3]], 
-                        [vtcs[4], vtcs[5], vtcs[6], vtcs[7]], [vtcs[7], vtcs[6], vtcs[2], vtcs[3]], 
-                        [vtcs[6], vtcs[5], vtcs[1], vtcs[2]], [vtcs[4], vtcs[5], vtcs[1], vtcs[0]]]
+        #         self.ax.scatter3D(vtcs[:, 0], vtcs[:, 1], vtcs[:, 2])
+        #         faces = [[vtcs[0], vtcs[1], vtcs[2], vtcs[3]], [vtcs[0], vtcs[4], vtcs[7], vtcs[3]], 
+        #                 [vtcs[4], vtcs[5], vtcs[6], vtcs[7]], [vtcs[7], vtcs[6], vtcs[2], vtcs[3]], 
+        #                 [vtcs[6], vtcs[5], vtcs[1], vtcs[2]], [vtcs[4], vtcs[5], vtcs[1], vtcs[0]]]
                 
-                self.ax.add_collection3d(Poly3DCollection(faces, 
-                    facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
+        #         self.ax.add_collection3d(Poly3DCollection(faces, 
+        #             facecolors='cyan', linewidths=1, edgecolors='cyan', alpha=.25))
                 
-            if rnd is not None:
-                rnd_pose = misc.pose2list(self.arm.fk_request(rnd.position))
-                plt.plot([rnd_pose[0]*self.extend_size], [rnd_pose[1]*self.extend_size], [rnd_pose[2]*self.extend_size], "^k")
+        #     if rnd is not None:
+        #         rnd_pose = misc.pose2list(self.arm.fk_request(rnd.position))
+        #         plt.plot([rnd_pose[0]*self.extend_size], [rnd_pose[1]*self.extend_size], [rnd_pose[2]*self.extend_size], "^k")
 
             # for node in self.node_list:
             #     if node.parent:
@@ -371,65 +365,65 @@ class RRT:
         return d, ds
 
 
-def main():
-    print("start " + __file__)
+# def main():
+#     print("start " + __file__)
 
-    dimension = 3
-    if dimension==2:
-        obstacle_list = [(5, 5, 1), (3, 6, 2), (3, 8, 2), (3, 10, 2), (7, 5, 2),
-                        (9, 5, 2)]  # [x, y, radius]
-        start_position = [0., 0.]
-        goal_position = [6.0, 10.0]
-        observation_space_low = [-2, -2]
-        observation_space_high = [15, 15]
-        grid_limits = [observation_space_low, observation_space_high]
+#     dimension = 3
+#     if dimension==2:
+#         obstacle_list = [(5, 5, 1), (3, 6, 2), (3, 8, 2), (3, 10, 2), (7, 5, 2),
+#                         (9, 5, 2)]  # [x, y, radius]
+#         start_position = [0., 0.]
+#         goal_position = [6.0, 10.0]
+#         observation_space_low = [-2, -2]
+#         observation_space_high = [15, 15]
+#         grid_limits = [observation_space_low, observation_space_high]
 
-    elif dimension==3:
-        obstacle_list = []  # (p1, p2, ..., p8)
-        start_position = [0., 0., 0.]
-        goal_position = [6.0, 10.0, 10.]
-        observation_space_low = [-2., -2., -2.]
-        observation_space_high = [15., 15., 15.]
-        grid_limits = [observation_space_low, observation_space_high]
-
-
-    show_animation = True
-
-    rrt = RRT(
-        start_position=start_position,
-        goal_position=goal_position,
-        obstacle_list=obstacle_list,
-        grid_limits=grid_limits,
-        expand_dis=1.0, # step size
-        path_resolution=0.1, # grid size
-        goal_sample_rate=5,
-        max_iter=500,
-        dimension=dimension,
-        extend_size=100,
-        animation=show_animation)
-
-    path = rrt.planning()
-    print("len(path):", len(path))
-
-    if path is None:
-        print("Cannot find path")
-    else:
-        print("found path!!")
-
-        # Draw final path
-        if show_animation:
-            rrt.draw_graph()
-            if(rrt.dimension==2):
-                plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
-                plt.grid(True)
-                plt.pause(0.01)  # Need for Mac
-                plt.show()
-            elif(rrt.dimension==3):
-                plt.plot([x for (x, y, z) in path], [y for (x, y, z) in path], [z for (x, y, z) in path], '-r')
-                plt.grid(True)
-                plt.pause(0.01)  # Need for Mac
-                plt.show()
+#     elif dimension==3:
+#         obstacle_list = []  # (p1, p2, ..., p8)
+#         start_position = [0., 0., 0.]
+#         goal_position = [6.0, 10.0, 10.]
+#         observation_space_low = [-2., -2., -2.]
+#         observation_space_high = [15., 15., 15.]
+#         grid_limits = [observation_space_low, observation_space_high]
 
 
-if __name__ == '__main__':
-    main()
+#     show_animation = True
+
+#     rrt = RRT(
+#         start_position=start_position,
+#         goal_position=goal_position,
+#         obstacle_list=obstacle_list,
+#         grid_limits=grid_limits,
+#         expand_dis=1.0, # step size
+#         path_resolution=0.1, # grid size
+#         goal_sample_rate=5,
+#         max_iter=500,
+#         dimension=dimension,
+#         extend_size=100,
+#         animation=show_animation)
+
+#     path = rrt.planning()
+#     print("len(path):", len(path))
+
+#     if path is None:
+#         print("Cannot find path")
+#     else:
+#         print("found path!!")
+
+#         # Draw final path
+#         if show_animation:
+#             rrt.draw_graph()
+#             if(rrt.dimension==2):
+#                 plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
+#                 plt.grid(True)
+#                 plt.pause(0.01)  # Need for Mac
+#                 plt.show()
+#             elif(rrt.dimension==3):
+#                 plt.plot([x for (x, y, z) in path], [y for (x, y, z) in path], [z for (x, y, z) in path], '-r')
+#                 plt.grid(True)
+#                 plt.pause(0.01)  # Need for Mac
+#                 plt.show()
+
+
+# if __name__ == '__main__':
+#     main()

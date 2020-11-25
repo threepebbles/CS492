@@ -90,25 +90,32 @@ def get_object_grasp_pose(target_object, world2base, direction=2):
     world2obj = get_object_frame(target_object)
     base2obj  = world2base.Inverse() * world2obj
 
+    # move the frame from bottom to center
     vector_a = np.array([base2obj.M.UnitZ()[0], base2obj.M.UnitZ()[1], base2obj.M.UnitZ()[2]])
     obj_pose_l = misc.pose2array(misc.KDLframe2Pose(base2obj))
     obj_pose_l[:3] = obj_pose_l[:3] + vector_a*(obstacles_sizes[target_object][2]/2.)
     base2obj_center = PyKDL.Frame(base2obj.M, PyKDL.Vector( obj_pose_l[0], obj_pose_l[1], obj_pose_l[2]))
 
+    # rotate w.r.t. direction
     if(direction==0):   # positive x axis
         base2obj_center.M.DoRotY(np.pi/2.)
+    elif(direction==1): # positive y axis, impossible cuz of the size
+        base2obj_center.M.DoRotX(-np.pi/2.)
+        base2obj_center.M.DoRotZ(-np.pi/2.)
     elif(direction==2): # positive z axis
         pass
     elif(direction==3): # negative x axis
         base2obj_center.M.DoRotY(-np.pi/2.)
+    elif(direction==4): # negative y axis, impossible cuz of the size
+        base2obj_center.M.DoRotX(np.pi/2.)
+        base2obj_center.M.DoRotZ(np.pi/2.)
     elif(direction==5): # negative z axis
         base2obj_center.M.DoRotY(np.pi)
     vector_a = np.array([base2obj_center.M.UnitZ()[0], base2obj_center.M.UnitZ()[1], base2obj_center.M.UnitZ()[2]])
     obj_pose_l = misc.pose2array(misc.KDLframe2Pose(base2obj_center))
     
-    grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] + vector_a*(obstacles_sizes[target_object][direction%3]/2. - 0.04), obj_pose_l[3:])) )
-    pre_grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] + 
-        [0., 0., 0.2], obj_pose_l[3:])) )
+    grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] + vector_a*(obstacles_sizes[target_object][direction%3]/2. - obstacles_sizes[target_object][direction%3]/3.), obj_pose_l[3:])) )
+    pre_grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] + vector_a*(obstacles_sizes[target_object][direction%3]/2. - obstacles_sizes[target_object][direction%3]/3.) + [0., 0., 0.2], obj_pose_l[3:])) )
 
     return grasp_pose, pre_grasp_pose
 
@@ -168,7 +175,7 @@ if __name__ == '__main__':
     # update a collision manager for objects
     collision_check_manager.update_manager()
     rospy.sleep(1)
-    # state = [-0.56377754507607612, 0.8014983653490225, -1.836142711096006, -1.9609894379612989, -1.7944873665859653, -1.5311642128981138]
+    # state =    [-0.56377754507607612, 0.8014983653490225, -1.836142711096006, -1.9609894379612989, -1.7944873665859653, -1.5311642128981138]
     # print( collision_check_manager.in_collision(state) )
     # sys.exit()
 
@@ -199,28 +206,52 @@ if __name__ == '__main__':
     pre_sr_ps.position.z += 0.2
 
 
-    target_object = "book"
-    storage = "storage_left"
-    grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=1)
-    # arm.moveJoint(arm.get_real_ik(pre_grasp_ps))
-    # arm.moveJoint(arm.get_real_ik(grasp_ps))
-    # print(arm.get_real_ik(grasp_ps))
-    # print(arm.get_real_ik(grasp_ps))
-    state = arm.get_real_ik(grasp_ps)
-    # state = [-0.56377754507607612, 0.8014983653490225, -1.836142711096006, -1.9609894379612989, -1.7944873665859653, -1.5311642128981138]
-    print( collision_check_manager.in_collision(arm.get_real_ik(pre_grasp_ps)) )
-    rospy.sleep(1.)
-    print( collision_check_manager.in_collision(arm.get_real_ik(grasp_ps)) )
-    # print( collision_check_manager.in_collision(arm.get_real_ik(grasp_ps)) )
-
-    # move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(pre_grasp_ps), 
-    #                 world2base=world2base, dimension=6, timeout=5.)
-    rospy.spin()
-
-    # for direction in range(6):
-    #     print("direction: {}".format(direction))
-    #     grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=direction)
-    #     move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(pre_grasp_ps), 
-    #                 world2base=world2base, dimension=6, timeout=3.)
-    #     rospy.sleep(3)
+    target_object = "snacks"
+    storage = "storage_right"
+    # grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=1)
     
+    # state = arm.get_real_ik(grasp_ps)
+    # print( collision_check_manager.in_collision(arm.get_real_ik(pre_grasp_ps)) )
+    # rospy.sleep(1.)
+    # print( collision_check_manager.in_collision(arm.get_real_ik(grasp_ps)) )
+    for direction in range(2, 8):
+        # if(direction%2==0): continue
+        if direction>=6:
+            di = direction-6
+        else:
+            di = direction
+        grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=di)
+        state = arm.get_real_ik(pre_grasp_ps)
+        if(state==-1):
+            print("invalid grasp pose")
+            continue
+        else:
+            print( collision_check_manager.in_collision(state) )
+            rospy.sleep(1.)
+        state = arm.get_real_ik(grasp_ps)
+        if(state==-1):
+            print("invalid pre grasp pose")
+            continue
+        else:
+            print( collision_check_manager.in_collision(state) )
+            rospy.sleep(1.)
+        
+
+        continue
+
+        flag = move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(pre_grasp_ps), 
+                        world2base=world2base, dimension=6, timeout=3.)
+        rospy.sleep(3.)
+
+        flag = move_position2position(start_position=arm.getJointAngles(), goal_position=arm.get_real_ik(grasp_ps), 
+                        world2base=world2base, dimension=6, timeout=3.)
+        if not flag: continue
+        rospy.sleep(3.)
+        arm.gripperClose()
+
+        flag = move_position2position(start_position=arm.getJointAngles(), goal_position=center_state, 
+                        world2base=world2base, dimension=6, timeout=2.)
+        break
+    # rospy.spin()
+
+   

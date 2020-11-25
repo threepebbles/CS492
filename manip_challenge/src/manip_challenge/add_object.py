@@ -132,13 +132,23 @@ if __name__ == '__main__':
     ## add_cube(obj_name='r1', obj_type='cube',
     ##             pos=[0.92,-0.3,0])
     #spawn_sdf_object('soda_can', [0.92,0.5,0.6])
+    # d = {"storage_left": ['book', 'eraser', 'soap2'],
+    #     "storage_right": ['snacks', 'biscuits', 'glue', 'soap'] }
+    rospy.loginfo("spawn sdf objects!!")
+    spawn_sdf_object('biscuits', [0.52,0.2,0.6, 0, 0, np.pi/4.])
+    spawn_sdf_object('book', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
+    spawn_sdf_object('glue', [0.72,0.3,0.6, 0, 0, np.pi/4.])
+    spawn_sdf_object('snacks', [0.6, 0 ,0.6, 0, np.pi/2., 0])
+    spawn_sdf_object('eraser', [0.72,-0.3,0.6, 0, 0, np.pi/4.])
+    spawn_sdf_object('soap', [0.52, 0.,0.6, 0, np.pi/2., 0])
+    spawn_sdf_object('soap2', [0.72,0.1,0.6, 0, np.pi/2., 0])
+    sys.exit()
 
-    import random
-    index = [i for i in range(0, 9)]
-    random.shuffle(index)
-    xs = [ (0.05 + 0.3*((i+3)//3))+np.random.uniform(-0.02, 0.02) for i in range(0, 9) ]
-    ys = [ (-0.35 + 0.35*(i%3))+np.random.uniform(-0.02, 0.02) for i in range(0, 9) ]
-
+    # import random
+    # index = [i for i in range(0, 9)]
+    # random.shuffle(index)
+    # xs = [ (0.05 + 0.3*((i+3)//3))+np.random.uniform(-0.02, 0.02) for i in range(0, 9) ]
+    # ys = [ (-0.35 + 0.35*(i%3))+np.random.uniform(-0.02, 0.02) for i in range(0, 9) ]
     # rospy.loginfo("spawn sdf objects!!")
     # spawn_sdf_object('book', [xs[index[0]], ys[index[0]], 0.6, 0, 0, np.pi/4.])
     # spawn_sdf_object('eraser', [xs[index[1]], ys[index[1]], 0.6, 0, 0, np.pi/2.])
@@ -148,21 +158,14 @@ if __name__ == '__main__':
     # spawn_sdf_object('glue', [xs[index[5]], ys[index[5]], 0.6, 0, 0, np.pi/4.])
     # spawn_sdf_object('soap', [xs[index[6]], ys[index[6]], 0.6, 0, 0, -np.pi/4.])
     
+    
+
     # rospy.loginfo("spawn sdf objects!!")
     # spawn_sdf_object('book', [0.52,0.2,0.6, 0, 0, np.pi/4.])
     # spawn_sdf_object('eraser', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
     # spawn_sdf_object('snacks', [0.72,0.3,0.6, 0, 0, np.pi/4.])
     # spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('biscuits', [0.72,-0.3,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('glue', [0.52, 0.,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('soap', [0.72,0.1,0.6, 0, 0, -np.pi/4.])
-
-    rospy.loginfo("spawn sdf objects!!")
-    # spawn_sdf_object('book', [0.52,0.2,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('eraser', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
-    # spawn_sdf_object('snacks', [0.72,0.3,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('biscuits', [0.72,-0.25, 0.6, 0, 0, np.pi/2.])
+    # spawn_sdf_object('biscuits', [0.72,-0.25, 0.6, 0, 0, np.pi/2.])
     # spawn_sdf_object('glue', [0.52, 0.,0.6, 0, 0, np.pi/4.])
     # spawn_sdf_object('soap', [0.72,0.1,0.6, 0, 0, -np.pi/4.])
     

@@ -104,6 +104,33 @@ class CollisionChecker(object):
                                             misc.KDLframe2Matrix(T))
             rospy.loginfo("collision manager: new object {}".format(model))
 
+        tables = ['storage_left', 'storage_right', 
+        'cafe_table', 'cafe_table_right', 'cafe_table_left', 
+        'ur5_base']
+        poses = [[0.0, 0, 0, 0.0, -0.0, 0.0], [0.0, 0, 0, 0.0, -0.0, 0.0], 
+                [0.0, 0.0, 0.755, 0.0, -0.0, 0.0], [0.0, 0, 0.58, 0.0, -0.0, 0.0], [0.0, 0, 0.58, 0.0, -0.0, 0.0], 
+                [0.0, 0.0, 0.58, 0.0, -0.0, 0.0]]
+        sizes = [[0.45, 0.35, 0.005], [0.45, 0.35, 0.005], 
+        [0.913, 0.913, 0.04], [0.5, 0.5, 0.02], [0.5, 0.5, 0.02],
+        [0.5, 0.5, 0.02]]
+        for model, pose, size in zip(tables, poses, sizes):
+            T     = misc.array2KDLframe(pose)
+            ret = {'type': 'box',
+                    'geom': trimesh.creation.box(size),
+                    'trans': T,
+                    'size': size}
+
+            self.obj_geom_dict[model] = ret
+                
+            geom  = self.obj_geom_dict[model]['geom']                
+            state = pose
+            T     = misc.array2KDLframe(state)*self.obj_geom_dict[model]['trans']
+
+            self._object_manager.add_object(model,\
+                                            geom,\
+                                            misc.KDLframe2Matrix(T))
+            rospy.loginfo("collision manager: new object {}".format(model))
+
         self.robot_geom_dict = self.get_trimesh_arm()
         state = [0,0,0,0,0,0]
         mats = self.arm_kdl.forward_recursive(state)
@@ -277,7 +304,7 @@ if __name__ == '__main__':
     manager = CollisionChecker(arm_kdl, viz=True)
 
     # desired joint state
-    state = [0, 1.5, 0,-3,-1.57,0]
+    state = [0, 0.5, 0,-3,-1.57,0]
     # state = [-0.2, 0, 0,0,0,0]
     # state = arm.getJointAngles()
     # print(state)

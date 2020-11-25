@@ -569,9 +569,10 @@ class ArmClient(object):
         new_jnt_pos_l = np.array(new_jnt_pos_l).T
 
         # TODO: reinterpolate progress...
-        mjt = min_jerk.min_jerk_traj()
-        progress, _ = mjt.min_jerk(np.array([[0],[1.]]), len(new_jnt_pos_l))
-        progress = progress[:,0,0]
+        new_jnt_pos_len = len(new_jnt_pos_l)
+        progress = []
+        for i in range(new_jnt_pos_len):
+            progress.append(float(i)/float(new_jnt_pos_len-1))
         
         self._clear()
         for i, jnt_pos in enumerate(new_jnt_pos_l):
@@ -790,8 +791,8 @@ class ArmClient(object):
         self._traj_viz_pub.publish(obj)
             
     # -----------------------------------------------------------------------------------------
-    def get_real_ik(self, pose):
-        rospy.logout('ArmClient: get_real_ik')
+    def get_ik_estimate(self, pose):
+        rospy.logout('ArmClient: get_ik_estimate')
         """
         Run a point-to-point movement in cartesian space
         The reference frame of the pose input is arm_baselink
@@ -800,7 +801,7 @@ class ArmClient(object):
 
         # IK
         bx=5e-3; by=5e-3; bz=5e-3; brx=1e-2; bry=1e-2; brz=1e-2 
-        for i in range(10):
+        for i in range(20):
             ik_goal = self.ik_request(ee_ps,
                                       bx=bx, by=by, bz=bz,
                                       brx=brx, bry=bry, brz=brz )

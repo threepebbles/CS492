@@ -273,9 +273,8 @@ if __name__ == '__main__':
     arm_kdl = create_kdl_kin('base_link', 'gripper_link')
     manager = CollisionChecker(arm_kdl, viz=True)
 
-    # desired joint state
-    # state = [0, 0, 0,-3,-1.57,0]
-    state = [-0.2, 0, 0,0,0,0]
+    # desired joint state    
+    state = [0.4, 0, 0,-3,-1.57,0]
 
     # update a collision manager for objects
     manager.update_manager()

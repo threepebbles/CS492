@@ -24,6 +24,7 @@ Let's copy the the class repo, install dependencies, and build it!
 git clone https://github.com/rirolab/cs492_IIR.git
 cd ..
 rosdep install --from-paths src --ignore-src --rosdistro=melodic -y
+sudo pip install -r requirements.txt
 catkin_make
 ~~~~
 If you want catkin_build, you can use it instead of catkin_make.

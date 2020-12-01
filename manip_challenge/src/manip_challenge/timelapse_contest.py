@@ -4,15 +4,12 @@ import copy
 import rospy
 import PyKDL
 from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
-from complex_action_client import misc, min_jerk, quaternion as qt
+from complex_action_client import misc
 
-from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
-from riro_srvs.srv import String_None, String_String, String_Pose, String_PoseResponse
+from geometry_msgs.msg import Pose
+from riro_srvs.srv import String_Pose
 from std_msgs.msg import String
 import tf
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 import json
 from copy import deepcopy
@@ -28,7 +25,7 @@ observation_space_high = [ 0.8*np.pi, -0.2*np.pi, 0.8*np.pi, 0.0,       -0.3*np.
 grid_limits = [observation_space_low, observation_space_high]
 resolution = 0.01
 
-center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
+# center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
 storage_left_center = [0., 0.55, 0.6]
 storage_right_center = [0., -0.55, 0.6]
 storage_size = [0.45, 0.35]
@@ -252,7 +249,7 @@ if __name__ == '__main__':
     sorted_objects = sorted(what_storage.items(), key=lambda x: d_base[x[0]])
 
     # arm.moveJoint(center_state)
-
+    
     path_traj = []
     start_position = arm.getJointAngles()
     for (target_object, storage) in sorted_objects:

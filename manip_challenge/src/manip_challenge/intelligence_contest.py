@@ -4,15 +4,12 @@ import copy
 import rospy
 import PyKDL
 from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
-from complex_action_client import misc, min_jerk, quaternion as qt
+from complex_action_client import misc
 
-from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose
-from riro_srvs.srv import String_None, String_String, String_Pose, String_PoseResponse
+from geometry_msgs.msg import Pose
+from riro_srvs.srv import String_Pose
 from std_msgs.msg import String
 import tf
-
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 
 import json
 from copy import deepcopy
@@ -24,11 +21,11 @@ object_size_l = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snac
 
 object_list = []
 observation_space_low  = [-0.8*np.pi, -0.6*np.pi, 0.0,      -0.7*np.pi, -0.7*np.pi, -np.pi]
-observation_space_high = [ 0.8*np.pi, -0.0,       0.7*np.pi, 0.0,       -0.3*np.pi,   np.pi]
+observation_space_high = [ 0.8*np.pi, -0.2*np.pi, 0.8*np.pi, 0.0,       -0.3*np.pi,   np.pi]
 grid_limits = [observation_space_low, observation_space_high]
 resolution = 0.01
 
-center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
+# center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
 storage_left_center = [0., 0.55, 0.6]
 storage_right_center = [0., -0.55, 0.6]
 storage_size = [0.45, 0.35]
@@ -53,7 +50,7 @@ def get_rrt_path_position2position(start_position, goal_position, goal_sample_ra
         goal_position=goal_position,
         obstacle_list=[],
         grid_limits=grid_limits,
-        expand_dis=0.03, # step size
+        expand_dis=0.02, # step size
         path_resolution=resolution, # grid size
         goal_sample_rate=goal_sample_rate,
         max_iter=10000,
@@ -251,22 +248,21 @@ if __name__ == '__main__':
             d_base[target_object] = np.linalg.norm(np.array([0., 0., 0.3]) - misc.pose2array(get_object_pose(target_object, world2base))[:3] + h)
     sorted_objects = sorted(what_storage.items(), key=lambda x: d_base[x[0]])
 
-    arm.moveJoint(center_state)
-
+    # arm.moveJoint(center_state)
+    
     path_traj = []
     start_position = arm.getJointAngles()
     for (target_object, storage) in sorted_objects:
         print("[CMD]: Moving {} to {}...".format(target_object, storage))
 
         stdi = get_z_align_direction(target_object=target_object, world2base=world2base)
-        print("stdi: ", stdi)
+
         if stdi==-1:
             # print("I cannot grasp T.T")
             continue
-            # sys.exit()
 
         for direction in range(stdi, stdi+6):
-            if(direction%4==1): continue # impossible cuz of the size
+            if(direction%3==1): continue # impossible cuz of the size
             if direction>=6:
                 di = direction-6
             else:
@@ -276,7 +272,7 @@ if __name__ == '__main__':
             pre_grasp_position = arm.get_ik_estimate(pre_grasp_ps)
             grasp_position = arm.get_ik_estimate(grasp_ps)
             if pre_grasp_position==-1 or grasp_position==-1: continue
-            
+
             path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=10, contain_gripper=True, grasping_object=None, grasping_direction=di)
 
             path_traj += get_rrt_path_position2position(start_position=pre_grasp_position, goal_position=grasp_position, goal_sample_rate=100, contain_gripper=False, grasping_object=None, grasping_direction=di)
@@ -292,7 +288,6 @@ if __name__ == '__main__':
             # print('There is no way to plan it')
             arm.gripperOpen()
             continue
-            # sys.exit()
 
         path_traj = get_rrt_path_position2position(start_position=grasp_position, goal_position=pre_grasp_position, goal_sample_rate=100, contain_gripper=False, grasping_object=None, grasping_direction=di)
         
@@ -316,7 +311,6 @@ if __name__ == '__main__':
 
             start_position = pre_sr_position
             ridx += 1
-
 
     end_time = timeit.default_timer()
     print("running time: {}...".format(end_time - start_time))

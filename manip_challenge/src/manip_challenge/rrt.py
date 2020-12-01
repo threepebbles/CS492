@@ -1,34 +1,12 @@
+#!/usr/bin/env python
 import math
 import random
-
-import matplotlib.pyplot as plt
 import numpy as np
-
 from operator import add
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
-from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
 # for collision check
 import collision_check
-import rospy, rospkg
-import numpy as np
-import copy
-import os, sys
-import threading
-import trimesh
-import json
-from bs4 import BeautifulSoup
-import tf
-from complex_action_client import misc
-from urdf_parser_py import urdf
-import urdf_parser_py
-import PyKDL
-from pykdl_utils.kdl_kinematics import create_kdl_kin
-from riro_rviz import draw_scene as ds
-from std_msgs.msg import String
-from visualization_msgs.msg import Marker
-
+import rospy
 
 class RRT:
     """
@@ -83,7 +61,7 @@ class RRT:
         self.grasping_object = kwargs['grasping_object']
         self.grasping_direction = kwargs['grasping_direction']
         
-        self.arm_kdl = create_kdl_kin('base_link', 'gripper_link')
+        self.arm_kdl = collision_check.create_kdl_kin('base_link', 'gripper_link')
         self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction,viz=True)
 
         # update a collision manager for objects

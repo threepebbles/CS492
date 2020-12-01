@@ -19,13 +19,12 @@ from copy import deepcopy
 import timeit
 
 import rrt
-import collision_check
 
 object_size_l = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
 
 object_list = []
 observation_space_low  = [-0.8*np.pi, -0.6*np.pi, 0.0,      -0.7*np.pi, -0.7*np.pi, -np.pi]
-observation_space_high = [ 0.8*np.pi, -0.0,       0.7*np.pi, 0.0,       -0.3*np.pi,   np.pi]
+observation_space_high = [ 0.8*np.pi, -0.2*np.pi, 0.8*np.pi, 0.0,       -0.3*np.pi,   np.pi]
 grid_limits = [observation_space_low, observation_space_high]
 resolution = 0.01
 
@@ -54,7 +53,7 @@ def get_rrt_path_position2position(start_position, goal_position, goal_sample_ra
         goal_position=goal_position,
         obstacle_list=[],
         grid_limits=grid_limits,
-        expand_dis=0.03, # step size
+        expand_dis=0.02, # step size
         path_resolution=resolution, # grid size
         goal_sample_rate=goal_sample_rate,
         max_iter=10000,
@@ -172,7 +171,7 @@ def get_object_grasp_pose(target_object, world2base, direction=2):
 
     grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_l[target_object][direction%3]/2. - 0.03, base2obj_center))
     
-    pre_grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_l[target_object][direction%3]/2. - 0.03 + 0.05, base2obj_center))
+    pre_grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_l[target_object][direction%3]/2. - 0.03 + 0.2, base2obj_center))
 
     return grasp_pose, pre_grasp_pose
 
@@ -253,32 +252,68 @@ if __name__ == '__main__':
     sorted_objects = sorted(what_storage.items(), key=lambda x: d_base[x[0]])
 
     # arm.moveJoint(center_state)
-    arm_kdl = collision_check.create_kdl_kin('base_link', 'gripper_link')
-    collision_check_manager = collision_check.CollisionChecker(arm_kdl, viz=True)
-    # update a collision manager for objects
-    collision_check_manager.update_manager()
-    rospy.sleep(0.1)
 
-    target_object = "snacks"
-    storage = "storage_right"
-    print("[CMD]: Moving {} to {}...".format(target_object, storage))
+    path_traj = []
+    start_position = arm.getJointAngles()
+    for (target_object, storage) in sorted_objects:
+        print("[CMD]: Moving {} to {}...".format(target_object, storage))
 
-    stdi = get_z_align_direction(target_object=target_object, world2base=world2base)
-    print("stdi: ", stdi)
+        stdi = get_z_align_direction(target_object=target_object, world2base=world2base)
 
-    for direction in range(stdi, stdi+6):
-        if(direction%3==1): continue # impossible cuz of the size
-        if direction>=6:
-            di = direction-6
-        else:
-            di = direction
+        if stdi==-1:
+            # print("I cannot grasp T.T")
+            continue
+
+        for direction in range(stdi, stdi+6):
+            if(direction%3==1): continue # impossible cuz of the size
+            if direction>=6:
+                di = direction-6
+            else:
+                di = direction
+            
+            grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=di)
+            pre_grasp_position = arm.get_ik_estimate(pre_grasp_ps)
+            grasp_position = arm.get_ik_estimate(grasp_ps)
+            if pre_grasp_position==-1 or grasp_position==-1: continue
+
+            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=10, contain_gripper=True, grasping_object=None, grasping_direction=di)
+
+            path_traj += get_rrt_path_position2position(start_position=pre_grasp_position, goal_position=grasp_position, goal_sample_rate=100, contain_gripper=False, grasping_object=None, grasping_direction=di)
+
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.017)
+            # rospy.sleep(len(path_traj)*0.017)
+
+            arm.gripperClose() # pick
+            rospy.sleep(.2)
+            break
         
-        grasp_ps, pre_grasp_ps = get_object_grasp_pose(target_object=target_object, world2base=world2base, direction=di)
-        pre_grasp_position = arm.get_ik_estimate(pre_grasp_ps)
-        grasp_position = arm.get_ik_estimate(grasp_ps)
-        if pre_grasp_position==-1 or grasp_position==-1: continue
-        print("di: ", di)
-        collision_check_manager.in_collision(pre_grasp_position)
-        rospy.sleep(2)
+        if(grasp_position==-1 or pre_grasp_position==-1):
+            # print('There is no way to plan it')
+            arm.gripperOpen()
+            continue
 
-           
+        path_traj = get_rrt_path_position2position(start_position=grasp_position, goal_position=pre_grasp_position, goal_sample_rate=100, contain_gripper=False, grasping_object=None, grasping_direction=di)
+        
+
+        if(storage=='storage_left'):
+            place_xyz = [lxs[lidx], lys[lidx], sl_ps.position.z+object_size_l[target_object][di%3]+0.03]
+
+            pre_sl_position, pre_sl_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, direction=di, ori=sl_place_ori)
+
+            path_traj = get_rrt_path_position2position(start_position=pre_sl_position2, goal_position=pre_sl_position, goal_sample_rate=100, contain_gripper=False, grasping_object=None, grasping_direction=di)
+
+            start_position = pre_sl_position
+            lidx += 1
+
+        elif(storage=='storage_right'):
+            place_xyz = [rxs[ridx], rys[ridx], sr_ps.position.z+object_size_l[target_object][di%3]+0.03]
+            
+            pre_sr_position, pre_sr_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, direction=di, ori=sr_place_ori)
+
+            path_traj = get_rrt_path_position2position(start_position=pre_sr_position2, goal_position=pre_sr_position, goal_sample_rate=100, contain_gripper=False, grasping_object=None, grasping_direction=di)
+
+            start_position = pre_sr_position
+            ridx += 1
+
+    end_time = timeit.default_timer()
+    print("running time: {}...".format(end_time - start_time))

@@ -9,7 +9,7 @@
   <!-- Export env variable so that gazebo finds our models -->
   <env name="GAZEBO_MODEL_PATH" value="$(arg gazebo_models)"/>
   
-  <node name="heiler_challenge" pkg="manip_challenge" type="manual_test.py"
+  <node name="intelligence_challenge" pkg="manip_challenge" type="intelligence_contest.py"
         output="screen"/>
   
 </launch>

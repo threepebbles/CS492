@@ -34,6 +34,10 @@ from visualization_msgs.msg import Marker
 
 from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 
+
+object_size_l = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
+
+
 class CollisionChecker(object):
     """Collision detection class
 
@@ -41,7 +45,7 @@ class CollisionChecker(object):
     Trimesh.
     """
 
-    def __init__(self, arm_kdl, contain_gripper=False, grasping_object=None, viz=False):
+    def __init__(self, arm_kdl, contain_gripper=False, grasping_object=None, grasping_direction=2,viz=False):
         """The constructor"""
         self.arm_kdl         = arm_kdl
         self.viz             = viz
@@ -63,6 +67,7 @@ class CollisionChecker(object):
 
         self.contain_gripper = contain_gripper
         self.grasping_object = grasping_object
+        self.grasping_direction = grasping_direction
 
         # for collision check
         self.init_manager()
@@ -159,6 +164,7 @@ class CollisionChecker(object):
             rospy.loginfo("_robot_manager: new link {}".format(link_name))
         
         if(self.contain_gripper):
+
             # imaginery gripper_link for rough collision check
             link_name = "gripper_link" # gripper
             tmp_T = self.robot_geom_dict['robotiq_coupler']['trans']
@@ -321,6 +327,27 @@ class CollisionChecker(object):
                               num_id=10+i)
 
         if(self.grasping_object is not None):
+            link_T *= self.obj_geom_dict[self.grasping_object]['trans']
+            vector_a = np.array([link_T.M.UnitZ()[0], link_T.M.UnitZ()[1], link_T.M.UnitZ()[2]])
+            obj_pose_l = misc.pose2array(misc.KDLframe2Pose(link_T))
+            grasp_pose = misc.list2Pose( np.concatenate((obj_pose_l[:3] - (object_size_l[self.grasping_object][self.grasping_direction%3]/2. - 0.03 + 0.14)*vector_a, obj_pose_l[3:])) )
+
+            link_T = misc.pose2KDLframe(grasp_pose)
+            if(self.grasping_direction%3==0):
+                link_T.M.DoRotY(np.pi/2.)
+            elif(self.grasping_direction%3==1):
+                link_T.M.DoRotX(np.pi/2.)
+
+            self._object_manager.set_transform(self.grasping_object,
+                                              misc.KDLframe2Matrix(link_T))
+            i+=1
+            if self.viz:
+                self.rviz_pub(self.obj_geom_dict[self.grasping_object],
+                              link_T,
+                              color=[1.,0,0,0.5],    
+                              num_id=10+i)
+
+
             f1, cs1 = self._robot_manager.in_collision_other(self._object_manager, return_names=True)
             f2, cs2 = self._robot_manager.in_collision_other(self._table_manager, return_names=True)
 
@@ -366,26 +393,33 @@ if __name__ == '__main__':
     rospy.sleep(1)
     
     arm = UR5ArmClient(timeout_scale=1., sim=True)
-    arm.gripperOpen()
+    # arm.gripperOpen()
     arm_kdl = create_kdl_kin('base_link', 'gripper_link')
-    manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object="soap", viz=True)
+    manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object="snacks", grasping_direction=2, viz=True)
 
     # desired joint state
     # state = [-0.095, -0.53, 0.2, -1,-1.57,0]
     state = arm.getJointAngles()
-    state[3] = -0.40*np.pi
-    print(state)
+    
     # print(state)
-    # [1.36741769, -0.40417682, -1.04669086, -0.11158767, -1.56817508, 1.37169917]
+    storage_right_top_position = [-1.8, -1.35, 1.1, -1.56, -1.57, -1.57]
+    storage_left_top_position =  [1.5, -1.35, 1.1, -1.56, -1.57, -1.57]
+    # storage_right_top_position[2] += 0.2
+    # storage_right_top_position[1] += 0.2
+    # storage_right_top_position[0] -= 0.1
+    # arm.moveJoint(storage_right_top_position)
+    # print(arm.getJointAngles())
+    # print(arm.getEndeffectorPose())
 
     # update a collision manager for objects
     manager.update_manager()
     rospy.sleep(0.1)
 
     # check if an arm collides with objects    
-    flag, collision_set = manager.in_collision(state)
-    # print flag
-    # print collision_set
+    for _ in range(1):
+        flag, collision_set = manager.in_collision(state)
+        print flag
+        print collision_set
 
     # if(flag):
     #     arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
@@ -394,5 +428,5 @@ if __name__ == '__main__':
     #     arm.gripperClose()
     #     arm.gripperOpen()
 
-    rospy.sleep(0.1)
+    # rospy.sleep(0.1)
     rospy.spin()

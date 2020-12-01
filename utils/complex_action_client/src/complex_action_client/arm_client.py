@@ -20,7 +20,7 @@ from trajectory_msgs.msg import *
 from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
-from complex_action_client import misc, min_jerk, quaternion as qt
+from complex_action_client import misc, quaternion as qt
 from complex_action_client.msg import EndpointState
 from complex_action_client.srv import String_None, None_StringResponse
 from complex_action_client.srv import None_String, String_NoneResponse
@@ -801,17 +801,17 @@ class ArmClient(object):
 
         # IK
         bx=5e-3; by=5e-3; bz=5e-3; brx=1e-2; bry=1e-2; brz=1e-2 
-        ik_goal = self.ik_request(ee_ps,
-                                      bx=bx, by=by, bz=bz,
-                                      brx=brx, bry=bry, brz=brz )
-        # for i in range(20):
-        #     ik_goal = self.ik_request(ee_ps,
+        # ik_goal = self.ik_request(ee_ps,
         #                               bx=bx, by=by, bz=bz,
         #                               brx=brx, bry=bry, brz=brz )
-        #     if ik_goal is False: return -1
-        #     if ik_goal is not False: break
-        #     bx *= 3.; by *= 3.; bz *= 3.
-        #     brx *= 3.; bry *= 3.; brz *= 3.
+        for i in range(10):
+            ik_goal = self.ik_request(ee_ps,
+                                      bx=bx, by=by, bz=bz,
+                                      brx=brx, bry=bry, brz=brz )
+            if ik_goal is False: return -1
+            if ik_goal is not False: break
+            bx *= 3.; by *= 3.; bz *= 3.
+            brx *= 3.; bry *= 3.; brz *= 3.
             
         if ik_goal is False:
             rospy.logerr("Maybe unreachable goal pose... ")

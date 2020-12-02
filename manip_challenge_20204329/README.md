@@ -23,5 +23,5 @@ Terminal 4
 pick and place
 ~~~~bash
 source ./devel/setup.bash
-roslaunch manip_challenge_20204329 timelapse_challenge
+roslaunch manip_challenge_20204329 multithread_timelapse_challenge.launch
 ~~~~

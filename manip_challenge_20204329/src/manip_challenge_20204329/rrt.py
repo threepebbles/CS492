@@ -67,7 +67,7 @@ class RRT:
 
         # update a collision manager for objects
         self.collision_check_manager.update_manager()
-        rospy.sleep(0.1)
+        # rospy.sleep(0.1)
 
     def planning(self):
         """
@@ -175,6 +175,7 @@ class RRT:
         if node is None:
             return False
 
+        self.collision_check_manager.update_manager()
         # flag==True: collision
         if (self.grasping_object is None):
             flag, cs = self.collision_check_manager.in_collision(node.position)

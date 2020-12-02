@@ -52,7 +52,7 @@ class UR5ArmClient(ArmClient):
 
 
         rospy.loginfo('ArmClient: Gripper setup')
-        rospy.sleep(1)
+        # rospy.sleep(1)
         # Position controller
         self._gripper = actionlib.SimpleActionClient(
             '/gripper_controller/gripper_cmd',  # namespace of the action topics
@@ -61,7 +61,7 @@ class UR5ArmClient(ArmClient):
         
         # Wait until the action server has been started and is listening for goals
         rospy.loginfo('ArmClient: Gripper server wait')
-        rospy.sleep(1)
+        # rospy.sleep(1)
         self._gripper.wait_for_server()
         # self.gripperClose()
         

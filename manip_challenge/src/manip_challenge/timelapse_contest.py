@@ -147,22 +147,20 @@ def get_object_grasp_pose(target_object, world2base, direction=2):
         base2obj_center.M.DoRotY(np.pi/2.)
         if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
             base2obj_center.M.DoRotZ(np.pi/2.)
-
-    elif(direction==1): # positive y axis, impossible cuz of the size
-        base2obj_center.M.DoRotX(-np.pi/2.)
-        if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
-            base2obj_center.M.DoRotZ(np.pi/2.)
+    # elif(direction==1): # positive y axis, impossible cuz of the size
+    #     base2obj_center.M.DoRotX(-np.pi/2.)
+    #     if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
+    #         base2obj_center.M.DoRotZ(np.pi/2.)
     elif(direction==2): # positive z axis
         pass
     elif(direction==3): # negative x axis
         base2obj_center.M.DoRotY(-np.pi/2.)
         if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
             base2obj_center.M.DoRotZ(np.pi/2.)
-
-    elif(direction==4): # negative y axis, impossible cuz of the size
-        base2obj_center.M.DoRotX(np.pi/2.)
-        if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
-            base2obj_center.M.DoRotZ(np.pi/2.)
+    # elif(direction==4): # negative y axis, impossible cuz of the size
+    #     base2obj_center.M.DoRotX(np.pi/2.)
+    #     if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
+    #         base2obj_center.M.DoRotZ(np.pi/2.)
     elif(direction==5): # negative z axis
         base2obj_center.M.DoRotY(np.pi)
 

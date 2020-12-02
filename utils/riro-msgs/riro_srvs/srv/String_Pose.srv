@@ -1,3 +1,3 @@
 string data
 ---
-bool data # geometry_msgs/Pose pose
+geometry_msgs/Pose pose

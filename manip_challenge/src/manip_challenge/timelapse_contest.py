@@ -3,7 +3,6 @@ import sys, math, numpy as np
 import copy
 import rospy
 import PyKDL
-from complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 from complex_action_client import misc
 
 from geometry_msgs.msg import Pose
@@ -16,6 +15,7 @@ from copy import deepcopy
 import timeit
 
 import rrt
+from my_complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 
 object_size_l = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
 
@@ -25,7 +25,7 @@ observation_space_high = [ 0.8*np.pi, -0.2*np.pi, 0.8*np.pi, 0.0,       -0.3*np.
 grid_limits = [observation_space_low, observation_space_high]
 resolution = 0.01
 
-# center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
+center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
 storage_left_center = [0., 0.55, 0.6]
 storage_right_center = [0., -0.55, 0.6]
 storage_size = [0.45, 0.35]
@@ -198,7 +198,7 @@ def move_to_storage(start_position, goal_xyz, direction, ori):
     path_traj += path_to_pre_storage_position2
 
     arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.017)
-    rospy.sleep(len(path_traj)*0.017)
+    # rospy.sleep(len(path_traj)*0.017)
 
     arm.gripperOpen() # place
     return pre_storage_position, pre_storage_position2
@@ -248,8 +248,8 @@ if __name__ == '__main__':
             d_base[target_object] = np.linalg.norm(np.array([0., 0., 0.3]) - misc.pose2array(get_object_pose(target_object, world2base))[:3] + h)
     sorted_objects = sorted(what_storage.items(), key=lambda x: d_base[x[0]])
 
-    # arm.moveJoint(center_state)
-    
+    arm.moveJoint(center_state)
+
     path_traj = []
     start_position = arm.getJointAngles()
     for (target_object, storage) in sorted_objects:

@@ -12,12 +12,15 @@ import json
 
 from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped, Point, Quaternion, PoseArray, Pose, WrenchStamped, Wrench #PointStamped,
-from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal, FollowJointTrajectoryResult, JointTrajectoryControllerState
-from trajectory_msgs.msg import JointTrajectoryPoint
+# from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal, FollowJointTrajectoryResult, JointTrajectoryControllerState
+# from trajectory_msgs.msg import JointTrajectoryPoint
+from control_msgs.msg import *
+from trajectory_msgs.msg import *
+
 from actionlib_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
-from complex_action_client import misc, min_jerk, quaternion as qt
+from complex_action_client import misc, quaternion as qt
 from complex_action_client.msg import EndpointState
 from complex_action_client.srv import String_None, None_StringResponse
 from complex_action_client.srv import None_String, String_NoneResponse
@@ -317,6 +320,7 @@ class ArmClient(object):
             poses = [poses]
 
         for i, ps in enumerate(poses):
+            # ret: list of the joint angles [theta0, theta1, theta2, ...]
             ret = self.ik_solver.get_ik(seed_state,
                                         ps.position.x,
                                         ps.position.y,
@@ -347,7 +351,7 @@ class ArmClient(object):
         point = JointTrajectoryPoint()
         point.positions = copy(positions)
         if velocities is not None:
-        	point.velocities = copy(velocities)
+            point.velocities = copy(velocities)
         else:
             point.velocities = [0]*self._n_joints
         ## point.accelerations = [0]*self._n_joints
@@ -519,7 +523,6 @@ class ArmClient(object):
         rospy.logout('ArmClient: moveJoint')
         # To avoid start configuration errors on a real robot, need to repeat twice.
         cur_positions = self.getDesJointAngles()
-        cur_positions = self.getDesJointAngles()
         
         if velocities is None:
             # Max joint velocity
@@ -566,14 +569,14 @@ class ArmClient(object):
         new_jnt_pos_l = np.array(new_jnt_pos_l).T
 
         # TODO: reinterpolate progress...
-        mjt = min_jerk.min_jerk_traj()
-        progress, _ = mjt.min_jerk(np.array([[0],[1.]]), len(new_jnt_pos_l))
-        progress = progress[:,0,0]
+        new_jnt_pos_len = len(new_jnt_pos_l)
+        progress = []
+        for i in range(new_jnt_pos_len):
+            progress.append(float(i)/float(new_jnt_pos_len-1))
         
         self._clear()
         for i, jnt_pos in enumerate(new_jnt_pos_l):
             self._add_point(jnt_pos, timeout=progress[i]*float(timeout))
-        self._add_point(jnt_pos, timeout=timeout)                
 
         self._client.send_goal_and_wait(self._goal, rospy.Duration.from_sec(timeout))
         return GoalStatus.SUCCEEDED
@@ -588,6 +591,7 @@ class ArmClient(object):
 
         
     def movePose(self, pose, timeout=1.0, no_wait=False, **kwargs):
+        rospy.logout('ArmClient: movePose')
         """
         Run a point-to-point movement in cartesian space
         The reference frame of the pose input is arm_baselink
@@ -629,7 +633,8 @@ class ArmClient(object):
         return NotImplemented
             
 
-    def movePoseTrajectory(self, poses, timeout=10., **kwargs):
+    # filled
+    def movePoseTrajectory(self, poses, timeout=5., **kwargs):
         """ Move the end-effector following a pose trajectory """
         return NotImplemented
     
@@ -785,3 +790,34 @@ class ArmClient(object):
 
         self._traj_viz_pub.publish(obj)
             
+    # -----------------------------------------------------------------------------------------
+    def get_ik_estimate(self, pose):
+        rospy.logout('ArmClient: get_ik_estimate')
+        """
+        Run a point-to-point movement in cartesian space
+        The reference frame of the pose input is arm_baselink
+        """
+        ee_ps    = self.detachTool(pose)
+
+        # IK
+        bx=5e-3; by=5e-3; bz=5e-3; brx=1e-2; bry=1e-2; brz=1e-2 
+        # ik_goal = self.ik_request(ee_ps,
+        #                               bx=bx, by=by, bz=bz,
+        #                               brx=brx, bry=bry, brz=brz )
+        for i in range(10):
+            ik_goal = self.ik_request(ee_ps,
+                                      bx=bx, by=by, bz=bz,
+                                      brx=brx, bry=bry, brz=brz )
+            if ik_goal is False: return -1
+            if ik_goal is not False: break
+            bx *= 3.; by *= 3.; bz *= 3.
+            brx *= 3.; bry *= 3.; brz *= 3.
+            
+        if ik_goal is False:
+            rospy.logerr("Maybe unreachable goal pose... ")
+            self._client.stop_tracking_goal() # to avoid returning the result of the previous'goal
+            # return GoalStatus.REJECTED
+            return -1
+            
+        position = [float(ik_goal[joint][0]) for joint in self._joint_names]
+        return position

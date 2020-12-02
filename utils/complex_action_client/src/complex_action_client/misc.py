@@ -164,4 +164,3 @@ def angle_vectors(v1, v2):
     v2u = v2/np.linalg.norm(v2)
     angle = np.arctan2(v1u[0]*v2u[1]-v1u[1]*v2u[0],v1u[0]*v2u[0]+v1u[1]*v2u[1])
     return angle
-

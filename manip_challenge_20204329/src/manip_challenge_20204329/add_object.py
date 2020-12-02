@@ -13,7 +13,7 @@ import misc
 rospack = rospkg.RosPack()
 data_path = os.path.join(rospack.get_path('world_model_data'), 'data')
 xacro_path = os.path.join(data_path, 'models/xacro')
-sdf_path = os.path.join(rospack.get_path('manip_challenge'), 'data', 'models')
+sdf_path = os.path.join(rospack.get_path('manip_challenge_20204329'), 'data', 'models')
 
 def add_storage(obj_name="storage1", obj_type="basket",
                     length=0.39, width=0.42, depth=0.02,
@@ -135,6 +135,7 @@ if __name__ == '__main__':
     # d = {"storage_left": ['book', 'eraser', 'soap2'],
     #     "storage_right": ['snacks', 'biscuits', 'glue', 'soap'] }
 
+    #############################
     # names = ['biscuits', 'book', 'glue', 'snacks', 'eraser', 'soap', 'soap2']
     # positions = [[0.52,0.2,0.6, 0, 0, np.pi/2.], [0.52,-0.2,0.6, 0, 0, np.pi/2.],
     # [0.72,0.3,0.6, 0, 0, np.pi/2.], [0.6, 0 ,0.6, 0, 0, np.pi/2.],
@@ -146,6 +147,7 @@ if __name__ == '__main__':
     # rospy.loginfo("spawn sdf objects!!")
     # sys.exit()
 
+    #############################
     # import random
     # names = ['biscuits', 'book', 'glue', 'snacks', 'eraser', 'soap', 'soap2']
     # positions = [[0.52,0.2,0.6, 0, 0, 0], [0.52,-0.2,0.6, 0, 0, np.pi/2.],
@@ -161,13 +163,12 @@ if __name__ == '__main__':
     # names[4] = 'soap'
     # names[5] = 'eraser'
     # names[6] = 'book'
-    
     # for i in range(7):
     #     spawn_sdf_object(names[i], positions[i])    
     # rospy.loginfo("spawn sdf objects!!")
     # sys.exit()
 
-
+    #############################
     # spawn_sdf_object('biscuits', [0.52,0.2,0.6, 0, 0, np.pi/4.])
     # spawn_sdf_object('book', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
     # spawn_sdf_object('glue', [0.72,0.3,0.6, 0, 0, np.pi/4.])
@@ -176,6 +177,7 @@ if __name__ == '__main__':
     # spawn_sdf_object('soap', [0.52, 0.,0.6, 0, np.pi/2., 0])
     # spawn_sdf_object('soap2', [0.72,0.1,0.6, 0, np.pi/2., 0])
     
+    #############################
     # import random
     # index = [i for i in range(0, 9)]
     # random.shuffle(index)
@@ -191,7 +193,7 @@ if __name__ == '__main__':
     # spawn_sdf_object('soap', [xs[index[6]], ys[index[6]], 0.6, 0, 0, -np.pi/4.])
     
     
-
+    #############################
     rospy.loginfo("spawn sdf objects!!")
     spawn_sdf_object('book', [0.52,0.2,0.6, 0, 0, np.pi/4.])
     spawn_sdf_object('eraser', [0.52,-0.2,0.6, 0, 0, np.pi/2.])

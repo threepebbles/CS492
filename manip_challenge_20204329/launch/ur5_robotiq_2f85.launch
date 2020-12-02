@@ -38,7 +38,7 @@
   <param name="obj_channel" value="add_objects" />
   
   <node name="world_model"
-        pkg="manip_challenge"
+        pkg="manip_challenge_20204329"
         type="world_model.py"
         args="--seed $(arg seed)"
         output="screen"

@@ -553,7 +553,8 @@ class ArmClient(object):
         new_jnt_pos_len = len(new_jnt_pos_l)
         progress = []
         for i in range(new_jnt_pos_len):
-            progress.append(float(i)/float(new_jnt_pos_len-1))
+            # progress.append(float(i)/float(new_jnt_pos_len-1))
+            progress.append(np.log(i/((new_jnt_pos_len-1)/(np.exp(1)-1)) + 1))
         
         self._clear()
         for i, jnt_pos in enumerate(new_jnt_pos_l):

@@ -62,7 +62,8 @@ class RRT:
         self.grasping_direction = kwargs['grasping_direction']
         
         self.arm_kdl = collision_check.create_kdl_kin('base_link', 'gripper_link')
-        self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction,viz=True)
+        # self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction,viz=True)
+        self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction)
 
         # update a collision manager for objects
         self.collision_check_manager.update_manager()

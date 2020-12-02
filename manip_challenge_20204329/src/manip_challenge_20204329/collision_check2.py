@@ -382,3 +382,46 @@ class CollisionChecker(object):
                                 Marker.CYLINDER)
         else:
             return rospy.logwarn("Collision Check: {} type is not implemented yet.".format(d['type']))
+
+
+if __name__ == '__main__':
+    rospy.init_node("collision_check_node")
+    rospy.sleep(1)
+    
+    arm = UR5ArmClient(timeout_scale=1., sim=True)
+    arm.gripperOpen()
+    arm_kdl = create_kdl_kin('base_link', 'gripper_link')
+    manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object="snacks", grasping_direction=2, viz=True)
+
+    # desired joint state
+    # state = [-0.095, -0.53, 0.2, -1,-1.57,0]
+    state = arm.getJointAngles()
+    
+    # print(state)
+    storage_right_top_position = [-1.8, -1.35, 1.1, -1.56, -1.57, -0.08]
+    storage_left_top_position =  [1.5, -1.35, 1.1, -1.56, -1.57, +0.08]
+    # storage_right_top_position[2] += 0.2
+    # storage_right_top_position[1] += 0.2
+    # storage_right_top_position[5] -= np.pi/2.
+    arm.moveJoint(storage_left_top_position)
+    print(arm.getJointAngles())
+    # print(arm.getEndeffectorPose())
+
+    # update a collision manager for objects
+    manager.update_manager()
+    rospy.sleep(0.1)
+
+    # check if an arm collides with objects    
+    for _ in range(1):
+        flag, collision_set = manager.in_collision(state)
+        print flag
+        print collision_set
+
+    # if(flag):
+    #     arm.moveJoint([1.3770551501789219, -1.434575401913625, 1.2522653950772369, -1.3755392458833133, -1.5621581114491467, 2.1658595873828146], timeout=3.0)
+    # else:
+    #     arm.gripperOpen()
+    #     arm.gripperClose()
+    #     arm.gripperOpen()
+
+    # rospy.sleep(0.1)

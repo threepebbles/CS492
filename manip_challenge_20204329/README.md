@@ -5,20 +5,20 @@
 Terminal 1
 ~~~~bash
 source ./devel/setup.bash
-roslaunch manip_challenge ur5_setup.launch
+roslaunch manip_challenge_20204329 ur5_setup.launch
 ~~~~
 If this is your first trial, it may take time. 
 
 Terminal 2
 ~~~~bash
 source ./devel/setup.bash
-roslaunch manip_challenge ur5_robotiq_2f85.launch
+roslaunch manip_challenge_20204329 ur5_robotiq_2f85.launch
 ~~~~
 
 Terminal 3
 ~~~~bash
 source ./devel/setup.bash
-rosrun manip_challenge example1.py
+rosrun manip_challenge_20204329 example1.py
 ~~~~
 You will be able to see how to send joint command and also close/open the gripper.
 
@@ -35,7 +35,7 @@ This dictionary represents the final locations of objects on the front table. Yo
 Terminal 1
 ~~~~bash
 source ./devel/setup.bash
-rosrun manip_challenge item_list_pub.py
+rosrun manip_challenge_20204329 item_list_pub.py
 ~~~~
 
 Terminal 2 (check the published topic from terminal)
@@ -50,6 +50,6 @@ rostopic echo /task_commands
 We are using the physics-based simulator, GAZEBO, for this challenge. Without using any perception method, we can identify and obtain the state of objects by subscribing the internal topics from GAZEO. Following commands and code show how to query the pose of a specific object:
 ~~~~bash
 source ./devel/setup.bash
-rosrun manip_challenge example2.py
+rosrun manip_challenge_20204329 example2.py
 ~~~~
 

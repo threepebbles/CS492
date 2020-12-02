@@ -63,7 +63,7 @@ class UR5ArmClient(ArmClient):
         rospy.loginfo('ArmClient: Gripper server wait')
         rospy.sleep(1)
         self._gripper.wait_for_server()
-        self.gripperClose()
+        # self.gripperClose()
         
         rospy.loginfo('ArmClient: Ready to run the robot')
 

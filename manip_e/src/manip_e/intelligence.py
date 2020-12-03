@@ -12,26 +12,22 @@ import tf
 
 import json
 from copy import deepcopy
-# import timeit
 import time
 from collections import deque
 from threading import Thread
 
-import rrt
+import rrt2
 from my_complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 
-object_size_l = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
-
-object_list = []
-observation_space_low  = [-0.8*np.pi, -0.6*np.pi, 0.0,      -0.7*np.pi, -0.7*np.pi, -np.pi]
-observation_space_high = [ 0.8*np.pi, -0.2*np.pi, 0.8*np.pi, 0.0,       -0.3*np.pi,   np.pi]
+object_size_dict = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
+observation_space_low  = [-np.pi, -np.pi, -np.pi,-np.pi, -np.pi, -np.pi]
+observation_space_high = [ np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]
 grid_limits = [observation_space_low, observation_space_high]
 
-center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
 storage_left_center = [0., 0.55, 0.6]
 storage_right_center = [0., -0.55, 0.6]
 storage_size = [0.45, 0.35]
-step = [storage_size[0]/3, storage_size[1]/2+0.05]
+step = [storage_size[0]/3-0.01, storage_size[1]/2+0.015]
 lxs = [ ( storage_left_center[0] - storage_size[0]/3 + step[0]*(i%3) ) for i in range(6) ]
 rxs = [ ( storage_right_center[0] - storage_size[0]/3  + step[0]*(i%3) ) for i in range(6) ]
 lys = [ ( storage_left_center[1] + storage_size[1]/2 - 0.1 - step[1]*(i//3) ) for i in range(6) ]
@@ -114,33 +110,33 @@ def get_object_grasp_pose(target_object, world2base, direction=2):
     base2obj  = world2base.Inverse() * world2obj
 
     # move the frame from bottom to center
-    base2obj_center = get_z_align_moved_frame(object_size_l[target_object][2]/2., base2obj)
+    base2obj_center = get_z_align_moved_frame(object_size_dict[target_object][2]/2., base2obj)
 
     # rotate w.r.t. direction
     if(direction==0):   # positive x axis
         base2obj_center.M.DoRotY(np.pi/2.)
-        if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
+        if(object_size_dict[target_object][(direction+1)%3] > object_size_dict[target_object][(direction+2)%3]):
             base2obj_center.M.DoRotZ(np.pi/2.)
     # elif(direction==1): # positive y axis, impossible cuz of the size
     #     base2obj_center.M.DoRotX(-np.pi/2.)
-    #     if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
+    #     if(object_size_dict[target_object][(direction+1)%3] > object_size_dict[target_object][(direction+2)%3]):
     #         base2obj_center.M.DoRotZ(np.pi/2.)
     elif(direction==2): # positive z axis
         pass
     elif(direction==3): # negative x axis
         base2obj_center.M.DoRotY(-np.pi/2.)
-        if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
+        if(object_size_dict[target_object][(direction+1)%3] > object_size_dict[target_object][(direction+2)%3]):
             base2obj_center.M.DoRotZ(np.pi/2.)
     # elif(direction==4): # negative y axis, impossible cuz of the size
     #     base2obj_center.M.DoRotX(np.pi/2.)
-    #     if(object_size_l[target_object][(direction+1)%3] > object_size_l[target_object][(direction+2)%3]):
+    #     if(object_size_dict[target_object][(direction+1)%3] > object_size_dict[target_object][(direction+2)%3]):
     #         base2obj_center.M.DoRotZ(np.pi/2.)
     elif(direction==5): # negative z axis
         base2obj_center.M.DoRotY(np.pi)
 
-    grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_l[target_object][direction%3]/2. - 0.03, base2obj_center))
+    grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_dict[target_object][direction%3]/2. - 0.03, base2obj_center))
     
-    pre_grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_l[target_object][direction%3]/2. - 0.03 + 0.18, base2obj_center))
+    pre_grasp_pose = misc.KDLframe2Pose(get_z_align_moved_frame(object_size_dict[target_object][direction%3]/2. - 0.03 + 0.15, base2obj_center))
 
     return grasp_pose, pre_grasp_pose
 
@@ -150,20 +146,21 @@ def get_rrt_path_position2position(start_position, goal_position, goal_sample_ra
         print("invalid position")
         return -1
 
-    my_rrt = rrt.RRT(
+    my_rrt = rrt2.RRT(
         start_position=start_position,
         goal_position=goal_position,
         obstacle_list=[],
         grid_limits=grid_limits,
         expand_dis=expand_dis, # step size
-        path_resolution=0.01, # grid size
+        path_resolution=0.02, # grid size
         goal_sample_rate=goal_sample_rate,
         max_iter=20000,
         dimension=6,
 
         contain_gripper=kwargs['contain_gripper'],
         grasping_object=kwargs['grasping_object'],
-        grasping_direction=kwargs['grasping_direction'])
+        grasping_direction=kwargs['grasping_direction'],
+        AI=True) # show intelligence
 
     path = my_rrt.planning()
     path.reverse()
@@ -181,11 +178,11 @@ def move_to_storage(start_position, goal_xyz, arm, target_object, direction, ori
     pose1 = Pose()
     pose1.position.x = goal_xyz[0]
     pose1.position.y = goal_xyz[1]
-    pose1.position.z = goal_xyz[2] + 0.2
+    pose1.position.z = goal_xyz[2] + 0.15
     pose1.orientation = ori
     pre_storage_position = arm.get_ik_estimate(pose1)
 
-    path_to_pre_storage_position = get_rrt_path_position2position(start_position=start_position, goal_position=pre_storage_position, goal_sample_rate=30, expand_dis=0.04, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
+    path_to_pre_storage_position = get_rrt_path_position2position(start_position=start_position, goal_position=pre_storage_position, goal_sample_rate=10, expand_dis=0.08, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
     path_traj += path_to_pre_storage_position
 
     pose2 = Pose()
@@ -196,35 +193,20 @@ def move_to_storage(start_position, goal_xyz, arm, target_object, direction, ori
     # place position
     pre_storage_position2 = arm.get_ik_estimate(pose2)
 
-    path_to_pre_storage_position2 = get_rrt_path_position2position(start_position=pre_storage_position, goal_position=pre_storage_position2, goal_sample_rate=100, expand_dis=0.04, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
+    path_to_pre_storage_position2 = get_rrt_path_position2position(start_position=pre_storage_position, goal_position=pre_storage_position2, goal_sample_rate=100, expand_dis=0.04, contain_gripper=False, grasping_object=None, grasping_direction=direction)
     path_traj += path_to_pre_storage_position2
 
     return path_traj, pre_storage_position, pre_storage_position2
 
 
-path_trajs = deque()
-threads = []
-def move_work(arm):
-    global path_trajs, threads
-
-    cnt = 0
-    while(len(path_trajs)>0 or threads[0].is_alive()):
-        if(len(path_trajs)>0):
-            arm.moveJointTraj(path_trajs[0], timeout=len(path_trajs[0])*0.01)
-            if(cnt%2==0):
-                arm.gripperClose()
-            else:
-                arm.gripperOpen()
-
-            path_trajs.popleft()
-            cnt += 1
-
-        time.sleep(0.05)
-    # print("move_thread done")
-
-def calc_work(arm):
-    global path_trajs
-    global lidx, ridx
+if __name__ == '__main__':
+    rospy.init_node('arm_client')
+    rospy.sleep(1)
+    arm = UR5ArmClient(timeout_scale=1., sim=True)
+    arm.gripperOpen()
+    # print(arm.getEndeffectorPose())
+    # print(arm.getJointAngles())
+    # sys.exit()
 
     world2base = get_base_frame()
     world2sl = get_object_frame("storage_left")
@@ -254,16 +236,18 @@ def calc_work(arm):
             what_storage[target_object] = storage
             stdi = get_z_align_direction(target_object=target_object, world2base=world2base)
             h = np.zeros(3)
-            h[2] = (-1)*(stdi//3)*object_size_l[target_object][stdi%3]/2.
-            d_base[target_object] = np.linalg.norm(np.array([0., 0., 1]) - misc.pose2array(get_object_pose(target_object, world2base))[:3] + h)
+            h[2] = (-1)*(stdi//3)*object_size_dict[target_object][stdi%3]/2.
+            d_base[target_object] = np.linalg.norm(np.array([0., 0., 1.]) - misc.pose2array(get_object_pose(target_object, world2base))[:3] + h)
     sorted_objects = sorted(what_storage.items(), key=lambda x: d_base[x[0]])
 
-    arm.moveJoint(center_state, timeout=1.)
+    center_state = [0.6, -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
+    arm.moveJoint(center_state, timeout=2.)
+    # sys.exit()
 
     path_traj = []
     start_position = arm.getJointAngles()
     for idx, (target_object, storage) in enumerate(sorted_objects):
-        # print("[CMD]: Moving {} to {}...".format(target_object, storage))
+        print("[CMD]: Moving {} to {}...".format(target_object, storage))
         stdi = get_z_align_direction(target_object=target_object, world2base=world2base)
 
         if stdi==-1:
@@ -282,10 +266,12 @@ def calc_work(arm):
             grasp_position = arm.get_ik_estimate(grasp_ps)
             if pre_grasp_position==-1 or grasp_position==-1: continue
 
-            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=10, expand_dis=0.02, contain_gripper=True, grasping_object=None, grasping_direction=di)
+            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=10, expand_dis=0.08, contain_gripper=True, grasping_object=None, grasping_direction=di)
             path_traj += get_rrt_path_position2position(start_position=pre_grasp_position, goal_position=grasp_position, goal_sample_rate=100, expand_dis=0.04, contain_gripper=False, grasping_object=None, grasping_direction=di)
 
-            path_trajs.append(path_traj)
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.02)
+            arm.gripperClose()
+            
             break
         
         if(grasp_position==-1 or pre_grasp_position==-1):
@@ -293,53 +279,32 @@ def calc_work(arm):
             arm.gripperOpen()
             continue
 
-        path_traj = get_rrt_path_position2position(start_position=grasp_position, goal_position=pre_grasp_position, goal_sample_rate=100, expand_dis=0.04, contain_gripper=False, grasping_object=None, grasping_direction=di)
+        path_traj = get_rrt_path_position2position(start_position=grasp_position, goal_position=pre_grasp_position, goal_sample_rate=100, expand_dis=0.08, contain_gripper=False, grasping_object=None, grasping_direction=di)
 
         if(storage=='storage_left'):
-            place_xyz = [lxs[lidx], lys[lidx], sl_ps.position.z+object_size_l[target_object][di%3]+0.03]
+            place_xyz = [lxs[lidx], lys[lidx], sl_ps.position.z+object_size_dict[target_object][di%3]+0.03]
 
             pt, pre_sl_position, pre_sl_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, arm=arm, target_object=target_object, direction=di, ori=sl_place_ori)
             path_traj += pt
-            path_trajs.append(path_traj)
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.02)
+            arm.gripperOpen()
+            
             if(idx==6): break
-            path_traj = get_rrt_path_position2position(start_position=pre_sl_position2, goal_position=pre_sl_position, goal_sample_rate=100, expand_dis=0.04, contain_gripper=False, grasping_object=None, grasping_direction=di)
+            path_traj = get_rrt_path_position2position(start_position=pre_sl_position2, goal_position=pre_sl_position, goal_sample_rate=100, expand_dis=0.08, contain_gripper=False, grasping_object=None, grasping_direction=di)
 
             start_position = pre_sl_position
             lidx += 1
 
         elif(storage=='storage_right'):
-            place_xyz = [rxs[ridx], rys[ridx], sr_ps.position.z+object_size_l[target_object][di%3]+0.03]
+            place_xyz = [rxs[ridx], rys[ridx], sr_ps.position.z+object_size_dict[target_object][di%3]+0.03]
             
             pt, pre_sr_position, pre_sr_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, arm=arm, target_object=target_object, direction=di, ori=sr_place_ori)
             path_traj += pt
-            path_trajs.append(path_traj)
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.02)
+            arm.gripperOpen()
+
             if(idx==6): break
-            path_traj = get_rrt_path_position2position(start_position=pre_sr_position2, goal_position=pre_sr_position, goal_sample_rate=100, expand_dis=0.04, contain_gripper=False, grasping_object=None, grasping_direction=di)
+            path_traj = get_rrt_path_position2position(start_position=pre_sr_position2, goal_position=pre_sr_position, goal_sample_rate=100, expand_dis=0.08, contain_gripper=False, grasping_object=None, grasping_direction=di)
 
             start_position = pre_sr_position
             ridx += 1
-
-
-if __name__ == '__main__':
-
-    rospy.init_node('arm_client')
-    # rospy.sleep(1)
-    arm = UR5ArmClient(timeout_scale=1., sim=True)
-    arm.gripperOpen()
-    # print(arm.getEndeffectorPose())
-    # print(arm.getJointAngles())
-    # sys.exit()
-
-    calc_thread = Thread(target = calc_work, args=(arm, ))
-    move_thread = Thread(target = move_work, args=(arm, ))
-    threads.append(calc_thread)
-    threads.append(move_thread)
-    
-    # start_time = timeit.default_timer()
-    for t in threads:
-        t.start()
-
-    for t in threads:
-        t.join()
-    # end_time = timeit.default_timer()
-    # print("running time: {}...".format(end_time - start_time))

@@ -15,9 +15,9 @@ if __name__ == '__main__':
     rospy.sleep(1.0)
 
 
-    d = {"storage_left": ['book', 'eraser', 'soap2'],
-        "storage_right": ['snacks', 'biscuits', 'glue', 'soap'] }
-
+    d = {"storage_left": ['glue', 'biscuits', 'eraser', 'soap'],
+        "storage_right": ['snacks', 'book', 'soap2'] }
+    print("tsk: ", d)
     pub.publish(json.dumps(d, encoding='ascii'))
     rospy.sleep(1.0)
     rospy.spin()

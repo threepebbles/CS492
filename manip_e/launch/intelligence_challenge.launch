@@ -2,14 +2,14 @@
 <launch>
 
   <arg name="gazebo_models" value="$(find
-                                   manip_challenge_20204329)/data/models:$(find
+                                   manip_e)/data/models:$(find
                                    ur5_gazebo)/models:$(optenv
                                    GAZEBO_MODEL_PATH)" />
   
   <!-- Export env variable so that gazebo finds our models -->
   <env name="GAZEBO_MODEL_PATH" value="$(arg gazebo_models)"/>
   
-  <node name="timelapse_challenge" pkg="manip_challenge_20204329" type="timelapse_contest.py"
+  <node name="intelligence_challenge" pkg="manip_e" type="intelligence.py"
         output="screen"/>
   
 </launch>

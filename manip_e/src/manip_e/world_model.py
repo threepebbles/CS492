@@ -12,8 +12,7 @@ import PyKDL
 from riro_srvs.srv import String_Pose, String_PoseResponse, String_String, String_StringResponse, None_String, None_StringResponse
 from gazebo_msgs.msg import ModelStates
 from std_msgs.msg import String
-
-import misc
+from complex_action_client import misc
 
 
 class GazeboParser():

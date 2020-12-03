@@ -5,7 +5,7 @@ import numpy as np
 from operator import add
 
 # for collision check
-import collision_check
+import collision_check2
 import rospy
 
 class RRT:
@@ -28,12 +28,11 @@ class RRT:
                  goal_position,
                  obstacle_list,
                  grid_limits,
-                 expand_dis=3.0, # step size
-                 path_resolution=0.1, # grid size
+                 expand_dis=0.03, # step size
+                 path_resolution=0.01, # grid size
                  goal_sample_rate=5,
-                 max_iter=500,
+                 max_iter=5000,
                  dimension=6,
-                 extend_size=100,
 
                  **kwargs):
         """
@@ -55,16 +54,14 @@ class RRT:
         self.obstacle_list = obstacle_list
         self.node_list = []
         self.dimension = dimension
-        self.extend_size = extend_size
 
         self.contain_gripper = kwargs['contain_gripper']
         self.grasping_object = kwargs['grasping_object']
         self.grasping_direction = kwargs['grasping_direction']
         
-        self.arm_kdl = collision_check.create_kdl_kin('base_link', 'gripper_link')
-        # self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction,viz=True)
-        self.collision_check_manager = collision_check.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction)
-
+        self.arm_kdl = collision_check2.create_kdl_kin('base_link', 'gripper_link')
+        self.collision_check_manager = collision_check2.CollisionChecker(self.arm_kdl, contain_gripper=self.contain_gripper, grasping_object=self.grasping_object, grasping_direction=self.grasping_direction, viz=True)
+        
         # update a collision manager for objects
         self.collision_check_manager.update_manager()
         # rospy.sleep(0.1)
@@ -139,23 +136,14 @@ class RRT:
         return d
 
     def get_random_node(self):
-        if random.randint(0, 100) > self.goal_sample_rate:
+        x = random.randint(0, 100)
+        if x > 90:
+            rnd = self.Node(self.end_node.position + np.array([0, -0.5*np.pi, -0.5*np.pi, 0., 0., 0.]))
+        elif x > self.goal_sample_rate:
             rnd = self.Node([random.uniform(self.grid_limits[0][i], self.grid_limits[1][i]) for i in range(self.dimension)])
         else:  # goal point sampling
             rnd = self.Node(self.end_node.position)
         return rnd
-
-    def point_resolution(self, p, grid_limits=None):
-        """
-        point resolution with respect to extend_size
-        """
-        if (grid_limits==None):
-            grid_limits = self.grid_limits
-
-        new_p = []
-        for i in range(self.dimension):
-            new_p.append( (p[i] - grid_limits[0][i])*self.extend_size + grid_limits[0][i]*self.extend_size )
-        return np.array(new_p)
 
     """ 
     find the index of nearest node nearest from rnd_node in node_list 

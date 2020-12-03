@@ -3,7 +3,7 @@ from distutils.core import setup
 from catkin_pkg.python_setup import generate_distutils_setup
 
 d = generate_distutils_setup()
-d['packages'] = ['manip_challenge_20204329']
+d['packages'] = ['manip_e']
 d['package_dir'] = {'': 'src'}
 
 setup(**d)

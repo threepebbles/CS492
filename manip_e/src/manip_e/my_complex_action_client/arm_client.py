@@ -552,11 +552,25 @@ class ArmClient(object):
         # TODO: reinterpolate progress...
         new_jnt_pos_len = len(new_jnt_pos_l)
         progress = []
-        for i in range(new_jnt_pos_len):
+        for i in range(0, new_jnt_pos_len, 1):
             progress.append(float(i)/float(new_jnt_pos_len-1))
-            # progress.append(np.log(i/((new_jnt_pos_len-1)/(np.exp(1)-1)) + 1))
-            # progress.append(-float((i-new_jnt_pos_len+1)**2)/((new_jnt_pos_len-1)**2) + 1)
-        
+        # if(new_jnt_pos_len>100):
+        #     p1 = 100
+        #     for i in range(0, p1, 1):
+        #         # progress.append(float(i)/float(new_jnt_pos_len-1))
+        #         # progress.append(0.699/np.log(p1) * np.log(i+1))
+        #         progress.append(0.69/(p1-1) * i)
+        #         # progress.append(-float((i-new_jnt_pos_len+1)**2)/((new_jnt_pos_len-1)**2) + 1)
+        #     for i in range(p1, new_jnt_pos_len, 1):
+        #         progress.append(0.7 + 0.3*float(i-p1)/float(new_jnt_pos_len-1-p1))
+        # else:
+        #     for i in range(0, new_jnt_pos_len, 1):
+        #         progress.append(float(i)/float(new_jnt_pos_len-1))
+        # progress.reverse()
+        # for i in range(new_jnt_pos_len):
+        #     progress[i] = 1.-progress[iZ]
+        # print("new_jnt_pos_len:", new_jnt_pos_len)
+        # print("progress: ", progress)
 
         self._clear()
         for i, jnt_pos in enumerate(new_jnt_pos_l):

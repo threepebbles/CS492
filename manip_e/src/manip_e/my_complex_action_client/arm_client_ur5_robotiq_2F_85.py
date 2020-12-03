@@ -13,7 +13,7 @@ from trajectory_msgs.msg import JointTrajectoryPoint
 from actionlib_msgs.msg import GoalStatus
 import control_msgs.msg
 
-import misc
+from complex_action_client import misc
 from arm_client import ArmClient
 
 

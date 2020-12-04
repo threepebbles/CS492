@@ -150,17 +150,21 @@ if __name__ == '__main__':
     
     #############################
     rospy.loginfo("spawn sdf objects!!")
-    spawn_sdf_object('book', [0.62,0.3,0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('snacks', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
-    spawn_sdf_object('eraser', [0.72,0.3,0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('biscuits', [0.72,-0.25, 0.6, 0, 0, np.pi/2.])
-    spawn_sdf_object('glue', [0.52, 0.2, 0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('soap', [0.4, 0.3,0.6, 0, 0, -np.pi/4.])
+    
+    # spawn_sdf_object('snacks', [0.45,-0.2,0.6, 0, 0, np.pi/2.])
+    # spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
+    # spawn_sdf_object('biscuits', [0.62,-0.3, 0.6, 0, 0, np.pi/2.])
+    
+    spawn_sdf_object('glue', [0.55, 0., 0.6, 0, 0, np.pi/2.])
+    # spawn_sdf_object('book', [0.67,0.1, 0.6, 0, 0, np.pi/2.])
+    # spawn_sdf_object('soap', [0.55, 0.35, 0.6, 0, 0, -np.pi/4.])
+    # spawn_sdf_object('eraser', [0.7,0.3,0.6, 0, 0, np.pi/2.])
 
     ##################################
     # Intelligence challenge
     for i in range(5):
-        spawn_sdf_object('box', [0.3 + 0.08*i, 0., 1.1, 0, 0, 0], name="box"+str(i))
+        spawn_sdf_object('box', [0.35 + 0.08*i, -0.2, 1.0, 0, 0, 0], name="box"+str(i))
 
+    for i in range(5, 10):
+        spawn_sdf_object('box', [0.35 + 0.08*(i-5), 0.2, 1.0, 0, 0, 0], name="box"+str(i))
     

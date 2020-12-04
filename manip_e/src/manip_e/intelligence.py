@@ -17,6 +17,7 @@ from collections import deque
 from threading import Thread
 
 import rrt2
+import collision_check2
 from my_complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 
 object_size_dict = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
@@ -182,7 +183,7 @@ def move_to_storage(start_position, goal_xyz, arm, target_object, direction, ori
     pose1.orientation = ori
     pre_storage_position = arm.get_ik_estimate(pose1)
 
-    path_to_pre_storage_position = get_rrt_path_position2position(start_position=start_position, goal_position=pre_storage_position, goal_sample_rate=10, expand_dis=0.08, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
+    path_to_pre_storage_position = get_rrt_path_position2position(start_position=start_position, goal_position=pre_storage_position, goal_sample_rate=30, expand_dis=0.08, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
     path_traj += path_to_pre_storage_position
 
     pose2 = Pose()
@@ -240,20 +241,20 @@ if __name__ == '__main__':
             d_base[target_object] = np.linalg.norm(np.array([0., 0., 1.]) - misc.pose2array(get_object_pose(target_object, world2base))[:3] + h)
     sorted_objects = sorted(what_storage.items(), key=lambda x: d_base[x[0]])
 
-    center_state = [0.6, -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
-    arm.moveJoint(center_state, timeout=2.)
-    # sys.exit()
-
     path_traj = []
     start_position = arm.getJointAngles()
     for idx, (target_object, storage) in enumerate(sorted_objects):
         print("[CMD]: Moving {} to {}...".format(target_object, storage))
+        # target_object = "biscuits"
+        # storage = "storage_left"
+
         stdi = get_z_align_direction(target_object=target_object, world2base=world2base)
 
         if stdi==-1:
             # print("I cannot grasp T.T")
             continue
 
+        rospy.sleep(0.1)
         for direction in range(stdi, stdi+6):
             if(direction%3==1): continue # impossible cuz of the size
             if direction>=6:
@@ -266,10 +267,10 @@ if __name__ == '__main__':
             grasp_position = arm.get_ik_estimate(grasp_ps)
             if pre_grasp_position==-1 or grasp_position==-1: continue
 
-            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=10, expand_dis=0.08, contain_gripper=True, grasping_object=None, grasping_direction=di)
+            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=30, expand_dis=0.08, contain_gripper=True, grasping_object=None, grasping_direction=di)
             path_traj += get_rrt_path_position2position(start_position=pre_grasp_position, goal_position=grasp_position, goal_sample_rate=100, expand_dis=0.04, contain_gripper=False, grasping_object=None, grasping_direction=di)
 
-            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.02)
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.05)
             arm.gripperClose()
             
             break
@@ -286,7 +287,7 @@ if __name__ == '__main__':
 
             pt, pre_sl_position, pre_sl_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, arm=arm, target_object=target_object, direction=di, ori=sl_place_ori)
             path_traj += pt
-            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.02)
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.05)
             arm.gripperOpen()
             
             if(idx==6): break
@@ -300,7 +301,7 @@ if __name__ == '__main__':
             
             pt, pre_sr_position, pre_sr_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, arm=arm, target_object=target_object, direction=di, ori=sr_place_ori)
             path_traj += pt
-            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.02)
+            arm.moveJointTraj(path_traj, timeout=len(path_traj)*0.05)
             arm.gripperOpen()
 
             if(idx==6): break

@@ -406,20 +406,22 @@ if __name__ == '__main__':
     arm = UR5ArmClient(timeout_scale=1., sim=True)
     arm.gripperOpen()
     arm_kdl = create_kdl_kin('base_link', 'gripper_link')
-    manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object="soap2", grasping_direction=2, viz=True)
+    manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object="glue", grasping_direction=2, viz=True)
 
     # desired joint state
     # state = [-0.095, -0.53, 0.2, -1,-1.57,0]
+    start_state = [1.5, -1.8, -1.6, -1.0, 1.5, 0.5]
     state = arm.getJointAngles()
+    print(state)
     
     # print(state)
-    storage_right_top_position = [-1.8, -1.35, 1.1, -1.56, -1.57, -0.08]
-    storage_left_top_position =  [1.5, -1.35, 1.1, -1.56, -1.57, +0.08]
+    # storage_right_top_position = [-1.8, -1.35, 1.1, -1.56, -1.57, -0.08]
+    # storage_left_top_position =  [1.5, -1.35, 1.1, -1.56, -1.57, +0.08]
     # storage_right_top_position[2] += 0.2
     # storage_right_top_position[1] += 0.2
     # storage_right_top_position[5] -= np.pi/2.
-    arm.moveJoint(storage_left_top_position)
-    print(arm.getJointAngles())
+    # arm.moveJoint(storage_left_top_position)
+    # print(arm.getJointAngles())
     # print(arm.getEndeffectorPose())
 
     # update a collision manager for objects

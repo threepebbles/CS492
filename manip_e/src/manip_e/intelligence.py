@@ -230,6 +230,10 @@ if __name__ == '__main__':
         print "There are no task commands: %s"%e
         sys.exit()
 
+    start_state = [1.5, -1.8, -1.6, -1.0, 1.5, 0.5]
+    arm.moveJoint(start_state)
+    rospy.sleep(2.)
+
     what_storage = {}
     d_base = {}
     for storage, target_objects in tsk.items():

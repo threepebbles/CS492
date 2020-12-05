@@ -155,7 +155,7 @@ def get_rrt_path_position2position(start_position, goal_position, goal_sample_ra
         expand_dis=expand_dis, # step size
         path_resolution=0.02, # grid size
         goal_sample_rate=goal_sample_rate,
-        max_iter=10000,
+        max_iter=3000,
         dimension=6,
 
         contain_gripper=kwargs['contain_gripper'],

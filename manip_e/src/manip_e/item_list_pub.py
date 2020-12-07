@@ -19,8 +19,8 @@ if __name__ == '__main__':
     #     "storage_right": ['snacks', 'biscuits', 'glue', 'soap'] }
     # d = {"storage_left": ['snacks', 'biscuits', 'soap2'],
     #     "storage_right": ['book', 'glue', 'eraser', 'soap'] }
-    d = {"storage_left": [],
-        "storage_right": ['glue'] }
+    d = {"storage_left": ['snacks'],
+        "storage_right": ['book'] }
     print("tsk: ", d)
     pub.publish(json.dumps(d, encoding='ascii'))
     rospy.sleep(1.0)

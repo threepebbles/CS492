@@ -194,24 +194,24 @@ if __name__ == '__main__':
     
     
     #############################
-    # rospy.loginfo("spawn sdf objects!!")
-    # spawn_sdf_object('book', [0.52,0.2,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('eraser', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
-    # spawn_sdf_object('snacks', [0.72,0.3,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('biscuits', [0.72,-0.25, 0.6, 0, 0, np.pi/2.])
-    # spawn_sdf_object('glue', [0.52, 0.,0.6, 0, 0, np.pi/4.])
-    # spawn_sdf_object('soap', [0.72,0.1,0.6, 0, 0, -np.pi/4.])
-
-    #############################
     rospy.loginfo("spawn sdf objects!!")
     spawn_sdf_object('book', [0.52,0.2,0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('snacks', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
-    spawn_sdf_object('eraser', [0.72,0.3,0.6, 0, 0, np.pi/4.])
+    spawn_sdf_object('eraser', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
+    spawn_sdf_object('snacks', [0.72,0.3,0.6, 0, 0, np.pi/4.])
     spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
     spawn_sdf_object('biscuits', [0.72,-0.25, 0.6, 0, 0, np.pi/4.])
     spawn_sdf_object('glue', [0.52, 0.,0.6, 0, 0, np.pi/4.])
-    spawn_sdf_object('soap', [0.72,0.1,0.6, 0, 0, np.pi/4.])
+    spawn_sdf_object('soap', [0.72,0.1,0.6, 0, 0, -np.pi/4.])
+
+    #############################
+    # rospy.loginfo("spawn sdf objects!!")
+    # spawn_sdf_object('book', [0.52,0.2,0.6, 0, 0, np.pi/4.])
+    # spawn_sdf_object('snacks', [0.52,-0.2,0.6, 0, 0, np.pi/2.])
+    # spawn_sdf_object('eraser', [0.72,0.3,0.6, 0, 0, np.pi/4.])
+    # spawn_sdf_object('soap2', [0.72,-0.1,0.6, 0, 0, np.pi/4.])
+    # spawn_sdf_object('biscuits', [0.72,-0.25, 0.6, 0, 0, np.pi/4.])
+    # spawn_sdf_object('glue', [0.52, 0.,0.6, 0, 0, np.pi/4.])
+    # spawn_sdf_object('soap', [0.72,0.1,0.6, 0, 0, -np.pi/4.])
     
     ## spawn_sdf_object('dropbox', [1.92,0.1,0.6])
     ## spawn_sdf_object('short_table', [2.92,0.1,0.6])

@@ -18,23 +18,29 @@ from threading import Thread
 
 from my_complex_action_client.arm_client_ur5_robotiq_2F_85 import UR5ArmClient
 
-object_size_dict = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
 
+object_size_dict = {'book':(0.13, 0.03, 0.206), 'eraser':(0.135, 0.06, 0.05), 'snacks': (0.165, 0.06, 0.235), 'soap2':(0.065, 0.04, 0.105), 'biscuits':(0.19, 0.06, 0.15), 'glue':(0.054, 0.032, 0.133), 'soap':(0.14, 0.065, 0.1)}
+observation_space_low  = [-0.8*np.pi, -np.pi, -np.pi, -np.pi, -np.pi, -np.pi]
+observation_space_high = [ 0.8*np.pi, np.pi, np.pi, np.pi, np.pi, np.pi]
+grid_limits = [observation_space_low, observation_space_high]
+
+center_state = [0., -1.3543552, 1.10131287, -1.55980649, -1.57114171, -np.pi/2]
 storage_left_center = [0., 0.55, 0.6]
 storage_right_center = [0., -0.55, 0.6]
 storage_size = [0.45, 0.35]
-step = [storage_size[0]/3-0.01, storage_size[1]/2+0.015]
-lxs = [ ( storage_left_center[0] - storage_size[0]/3 + step[0]*(i%3) ) for i in range(6) ]
-rxs = [ ( storage_right_center[0] - storage_size[0]/3  + step[0]*(i%3) ) for i in range(6) ]
-lys = [ ( storage_left_center[1] + storage_size[1]/2 - 0.1 - step[1]*(i//3) ) for i in range(6) ]
-rys = [ ( storage_right_center[1] - storage_size[1]/2 + 0.1 + step[1]*(i//3) ) for i in range(6) ]
-lidx, ridx = 0, 0
+step = [storage_size[0]/3 - 0.03, storage_size[1]/2]
+lxs = [ ( storage_left_center[0] - storage_size[0]/3 + step[0]*(i%3) + (0.08*(i//3)) ) for i in range(6) ]
+rxs = [ ( storage_right_center[0] - storage_size[0]/3  + step[0]*(i%3) + (0.08*(i//3)) ) for i in range(6) ]
+lys = [ ( storage_left_center[1] + storage_size[1]/2 - 0.15 - step[1]*(i//3) ) for i in range(6) ]
+rys = [ ( storage_right_center[1] - storage_size[1]/2 + 0.15 + step[1]*(i//3) ) for i in range(6) ]
+lidx, ridx = 1, 1
 
 # storage_right_top_position = [-1.8, -1.35, 1.1, -1.56, -1.57, -1.57]
 # storage_left_top_position =  [1.5, -1.35, 1.1, -1.56, -1.57, -1.57]
 storage_right_top_position = [-1.8, -1.35, 1.1, -1.56, -1.57, +0.3]
+storage_right_top_position2 = [-2.06, -1.90, 2.14, -2.01, -1.486, +1.256]
 storage_left_top_position =  [1.5, -1.35, 1.1, -1.56, -1.57, -0.3]
-
+storage_left_top_position2 =  [1.2, -1.96, 2.14, -2.01, -1.486, +1.256]
 
 def get_object_frame(target_object):
     """ Return the object top surface frame wrt the world frame. """
@@ -139,13 +145,6 @@ def get_object_grasp_pose(target_object, world2base, direction=2):
 
 def move_to_storage(start_position, goal_xyz, arm, target_object, direction, ori):
     path_traj = []
-    
-    pose1 = Pose()
-    pose1.position.x = goal_xyz[0]
-    pose1.position.y = goal_xyz[1]
-    pose1.position.z = goal_xyz[2] + 0.15
-    pose1.orientation = ori
-    pre_storage_position = arm.get_ik_estimate(pose1)
 
     pose2 = Pose()
     pose2.position.x = goal_xyz[0]
@@ -153,9 +152,13 @@ def move_to_storage(start_position, goal_xyz, arm, target_object, direction, ori
     pose2.position.z = goal_xyz[2]
     pose2.orientation = ori
     # place position
-    pre_storage_position2 = arm.get_ik_estimate(pose2)
+    place_position = arm.get_ik_estimate(pose2)
 
-    return pre_storage_position, pre_storage_position2
+    # pre place position
+    pre_place_position = deepcopy(place_position)
+    pre_place_position[2] -= 0.3
+
+    return pre_place_position, place_position
 
 
 if __name__ == '__main__':
@@ -188,9 +191,9 @@ if __name__ == '__main__':
         print "There are no task commands: %s"%e
         sys.exit()
 
-    start_state = [1.5, -1.8, -1.6, -1.0, 1.5, 0.5]
-    arm.moveJoint(start_state)
-    rospy.sleep(2.)
+    # start_state = [1.5, -1.8, -1.6, -1.0, 1.5, 0.5]
+    # arm.moveJoint(start_state)
+    # rospy.sleep(2.)
 
     what_storage = {}
     d_base = {}
@@ -244,7 +247,6 @@ if __name__ == '__main__':
         if(storage=='storage_left'):
             place_xyz = [lxs[lidx], lys[lidx], sl_ps.position.z+object_size_dict[target_object][di%3]+0.03]
 
-
             pre_sl_position, pre_sl_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, arm=arm, target_object=target_object, direction=di, ori=sl_place_ori)
             
             arm.moveJoint(pre_sl_position, timeout=3.)
@@ -262,8 +264,8 @@ if __name__ == '__main__':
             
             pre_sr_position, pre_sr_position2 = move_to_storage(start_position=pre_grasp_position, goal_xyz=place_xyz, arm=arm, target_object=target_object, direction=di, ori=sr_place_ori)
             
-            arm.moveJoint(pre_sl_position, timeout=3.)
-            arm.moveJoint(pre_sl_position2, timeout=4.)
+            arm.moveJoint(pre_sr_position, timeout=3.)
+            arm.moveJoint(pre_sr_position2, timeout=4.)
             arm.gripperOpen()
 
             if(idx==6): break

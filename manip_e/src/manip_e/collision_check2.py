@@ -182,7 +182,7 @@ class CollisionChecker(object):
     Trimesh.
     """
 
-    def __init__(self, arm_kdl, contain_gripper=False, grasping_object=None, grasping_direction=2,viz=False):
+    def __init__(self, arm_kdl, contain_gripper=False, grasping_object=None, grasping_direction=2,viz=True):
         """The constructor"""
         self.arm_kdl         = arm_kdl
         self.viz             = viz
@@ -542,31 +542,30 @@ if __name__ == '__main__':
 
 
     arm = UR5ArmClient(timeout_scale=1., sim=True)
+    # # print(arm.getJointAngles())
+    # # sys.exit()
+
+    # # storage_right_top_position2 = [1.3, -1.9, 2.1, -2.0, -1.50, +1.34]
+
+    # storage_right_top_position2 = [-2.06, -1.96, 2.14, -2.01, -1.486, +1.256]
+    # # storage_right_top_position2 = [1.2, -1.96, 2.14, -2.01, -1.486, +1.256]
+    # arm.moveJoint(storage_right_top_position2)
+    
+    # goal_pose = arm.fk_request(storage_right_top_position2)
+
+    # ori = (arm.fk_request(storage_right_top_position2)).orientation
+    # pose1 = Pose()
+    # pose1.position.x = goal_pose.position.x
+    # pose1.position.y = goal_pose.position.y
+    
+    # pose1.position.z = goal_pose.position.z + 0.12
+    # pose1.orientation = ori
+    # pre_storage_position = arm.get_ik_estimate(pose1)
+
+    # # # storage_right_top_position2 = [-1.8, -1.8, 2.1, -2.1, -1.57, +np.pi/2]
+    # arm.moveJoint(pre_storage_position)
     # print(arm.getJointAngles())
     # sys.exit()
-
-    # storage_right_top_position2 = [1.3, -1.9, 2.1, -2.0, -1.50, +1.34]
-
-    storage_right_top_position2 = [-2.06, -1.96, 2.14, -2.01, -1.486, +1.256]
-    # storage_right_top_position2 = [1.2, -1.96, 2.14, -2.01, -1.486, +1.256]
-    arm.moveJoint(storage_right_top_position2)
-    
-    goal_pose = arm.fk_request(storage_right_top_position2)
-
-    ori = (arm.fk_request(storage_right_top_position2)).orientation
-    pose1 = Pose()
-    pose1.position.x = goal_pose.position.x
-    pose1.position.y = goal_pose.position.y
-    
-    pose1.position.z = goal_pose.position.z + 0.12
-    pose1.orientation = ori
-    pre_storage_position = arm.get_ik_estimate(pose1)
-
-    # # storage_right_top_position2 = [-1.8, -1.8, 2.1, -2.1, -1.57, +np.pi/2]
-    arm.moveJoint(pre_storage_position)
-    print(arm.getJointAngles())
-
-    sys.exit()
 
     world2base = get_base_frame()
     world2sl = get_object_frame("storage_left")
@@ -581,6 +580,10 @@ if __name__ == '__main__':
     sr_ps = misc.KDLframe2Pose(base2sr)
     sr_place_ori = (arm.fk_request(storage_right_top_position)).orientation
 
+    # start_state = [1.5, -1.8, -1.6, -1.0, 1.5, 0.5]
+    # arm.moveJoint(start_state)
+    # rospy.sleep(2.)
+
     # get task commands
     try:
         msg = rospy.wait_for_message("/task_commands", String)
@@ -589,9 +592,6 @@ if __name__ == '__main__':
         print "There are no task commands: %s"%e
         sys.exit()
 
-    start_state = [1.5, -1.8, -1.6, -1.0, 1.5, 0.5]
-    arm.moveJoint(start_state)
-    rospy.sleep(2.)
 
     what_storage = {}
     d_base = {}
@@ -628,8 +628,9 @@ if __name__ == '__main__':
             grasp_position = arm.get_ik_estimate(grasp_ps)
             if pre_grasp_position==-1 or grasp_position==-1: continue
 
-            manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object=None, grasping_direction=None, viz=True)
-            f, cs = manager.in_collision(pre_grasp_position)
+            collision_check_manager = CollisionChecker(arm_kdl, contain_gripper=True, grasping_object=None, grasping_direction=None, viz=True)
+            collision_check_manager.update_manager()
+            f, cs = collision_check_manager.in_collision(pre_grasp_position)
             rospy.sleep(2.)
             print(f, cs)
             break

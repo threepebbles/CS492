@@ -188,7 +188,7 @@ def move_to_storage(start_position, goal_xyz, arm, target_object, direction, ori
     pre_place_position = deepcopy(place_position)
     pre_place_position[2] -= 0.3
 
-    path_to_pre_storage_position = get_rrt_path_position2position(start_position=start_position, goal_position=pre_place_position, goal_sample_rate=30, expand_dis=0.06, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
+    path_to_pre_storage_position = get_rrt_path_position2position(start_position=start_position, goal_position=pre_place_position, goal_sample_rate=35, expand_dis=0.06, contain_gripper=True, grasping_object=target_object, grasping_direction=direction)
     path_traj += path_to_pre_storage_position
 
     path_to_pre_storage_position2 = get_rrt_path_position2position(start_position=pre_place_position, goal_position=place_position, goal_sample_rate=100, expand_dis=0.02, contain_gripper=False, grasping_object=None, grasping_direction=direction)
@@ -292,7 +292,7 @@ def calc_work(arm):
             grasp_position = arm.get_ik_estimate(grasp_ps)
             if pre_grasp_position==-1 or grasp_position==-1: continue
 
-            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=30, expand_dis=0.06, contain_gripper=True, grasping_object=None, grasping_direction=di)
+            path_traj += get_rrt_path_position2position(start_position=start_position, goal_position=pre_grasp_position, goal_sample_rate=35, expand_dis=0.06, contain_gripper=True, grasping_object=None, grasping_direction=di)
             path_traj += get_rrt_path_position2position(start_position=pre_grasp_position, goal_position=grasp_position, goal_sample_rate=100, expand_dis=0.02, contain_gripper=False, grasping_object=None, grasping_direction=di)
 
             path_trajs.append(path_traj)

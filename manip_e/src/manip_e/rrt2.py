@@ -139,7 +139,7 @@ class RRT:
         x = random.randint(0, 100)
         if x > self.goal_sample_rate:
             rnd = self.Node([random.uniform(self.grid_limits[0][i], self.grid_limits[1][i]) for i in range(self.dimension)])
-        elif x > self.goal_sample_rate-10:
+        elif x > self.goal_sample_rate-15:
             rnd = self.Node([a+b for a,b in zip(self.end_node.position, [0, -0.3*np.pi, -0.8*np.pi, 0., 0., 0.])])
         else:  # goal point sampling
             rnd = self.Node(self.end_node.position)
